@@ -5,43 +5,76 @@
 // --- SISTEMA DE SOM (CORRIGIDO PARA MOBILE) ---
 // --- SISTEMA DE SOM ---
 // --- SISTEMA DE SOM (ARQUIVOS LOCAIS) ---
+// --- SISTEMA DE SOM ---
+// --- SISTEMA DE SOM COM MULTI-CAMADAS ---
 const sounds = {
-    click: new Audio('click.mp3'), // Botões comuns
-    roll:  new Audio('roll.mp3'),  // Dados rolando
-    touch: new Audio('touch.mp3'), // Abas e Avatares (suave)
-    hold:  new Audio('hold.mp3'),  // Carregando força
-    shoot: new Audio('shoot.mp3'), // Disparando o dado
-    start: new Audio('start.mp3')  // Iniciar jogo (épico)
+    click:   new Audio('./click.mp3'),
+    touch:   new Audio('./touch.mp3'),
+    hold:    new Audio('./hold.mp3'),
+    shoot:   new Audio('./shoot.mp3'),
+    start:   new Audio('./start.mp3'),
+    crit:    new Audio('./crit.mp3'),   // Vitória (Nat 20)
+    fumble:  new Audio('./fumble.mp3'), // Falha Crítica (Nat 1)
+    
+    // Lista dos seus 5 sons de colisão
+    collides: [
+        new Audio('./collide1.mp3'), // [0] Mais agudo/leve
+        new Audio('./collide2.mp3'), // [1]
+        new Audio('./collide3.mp3'), // [2] Médio
+        new Audio('./collide4.mp3'), // [3]
+        new Audio('./collide5.mp3')  // [4] Mais grave/forte
+    ]
 };
 
-// Pré-carrega tudo para não ter atraso
-Object.values(sounds).forEach(s => s.load());
+// Pré-carrega todos para evitar atrasos
+Object.values(sounds).forEach(s => {
+    if(Array.isArray(s)) s.forEach(a => a.load());
+    else s.load();
+});
 
-// Variável para controlar o som de "carregar" (loop)
-let holdSoundInstance = null;
+// ESSA LINHA PRECISA ESTAR AQUI (FORA DE TUDO):
+let currentHoldSound = null;
 
 function playSound(type) {
-    if (sounds[type]) {
-        // Para os outros sons (Tocam uma vez e pronto)
-        const audio = sounds[type].cloneNode();
-        
-        // Ajuste fino de volumes
-        if (type === 'roll') audio.volume = 1.0;
-        else if (type === 'shoot') audio.volume = 0.8;
-        else if (type === 'touch') audio.volume = 0.4;
-        else audio.volume = 1;
+    if (!sounds[type]) return;
 
-        // Variação de velocidade para ficar orgânico
-        audio.playbackRate = 0.95 + Math.random() * 0.1;
+    // Lógica Especial para o HOLD (Segurar)
+    if (type === 'hold') {
+        // Se já tiver um tocando, para ele antes de começar outro
+        if (currentHoldSound) {
+            currentHoldSound.pause();
+            currentHoldSound.currentTime = 0;
+        }
         
-        audio.play().catch(e => console.warn("Som bloqueado:", e));
+        currentHoldSound = sounds[type].cloneNode();
+        currentHoldSound.volume = 0.3;
+        // O loop garante que se você segurar por 10 segundos, o som não acaba
+        currentHoldSound.loop = true; 
+        currentHoldSound.play().catch(() => {});
+        return;
     }
+
+    // Lógica para todos os outros sons
+    const audio = sounds[type].cloneNode();
+    
+    // Volumes individuais
+    if (type === 'roll') audio.volume = 1.0;
+    else if (type === 'shoot') audio.volume = 0.2;
+    else if (type === 'touch') audio.volume = 0.3;
+    else audio.volume = 1.0; // Click e Start
+
+    // Variação de tom para não ficar robótico
+    audio.playbackRate = 0.95 + Math.random() * 0.1;
+    
+    audio.play().catch(e => console.warn("Som bloqueado:", e));
 }
 
+// Função para CORTAR o som imediatamente
 function stopHoldSound() {
-    if (holdSoundInstance) {
-        holdSoundInstance.pause();
-        holdSoundInstance = null;
+    if (currentHoldSound) {
+        currentHoldSound.pause();
+        currentHoldSound.currentTime = 0;
+        currentHoldSound = null;
     }
 }
 // (O restante do código continua igual: const avatars = { ... )
@@ -364,8 +397,8 @@ function initPhysicsAndGraphics() {
     sparkleTexture = createSparkleTexture();
     world = new CANNON.World(); world.gravity.set(0, -40, 0); world.broadphase = new CANNON.NaiveBroadphase(); world.solver.iterations = 10;
     const matGround = new CANNON.Material(); const matDice = new CANNON.Material();
-    world.addContactMaterial(new CANNON.ContactMaterial(matGround, matDice, { friction: 0.5, restitution: 0.3 }));
-    world.addContactMaterial(new CANNON.ContactMaterial(matDice, matDice, { friction: 0.4, restitution: 0.2 }));
+    world.addContactMaterial(new CANNON.ContactMaterial(matGround, matDice, { friction: 0.2, restitution: 0.7 }));
+    world.addContactMaterial(new CANNON.ContactMaterial(matDice, matDice, { friction: 0.1, restitution: 0.7 }));
     const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane(), material: matGround });
     groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2); world.addBody(groundBody);
     walls.left = createWallBody(); walls.right = createWallBody(); walls.top = createWallBody(); walls.bottom = createWallBody();
@@ -403,16 +436,35 @@ function createDiceGeometry(type, size) {
 }
 function addDice(sides) {
     if (!scene) return;
-    const char = campaign.characters[activeCharIndex]; const color = char ? char.color : diceConfigs[sides].color;
+    const char = campaign.characters[activeCharIndex]; 
+    const color = char ? char.color : diceConfigs[sides].color;
+    
     try {
+        // 1. Cria a parte Visual (Mesh)
         const { geometry, shape, angularDamping } = createDiceGeometry(sides, 1.0);
         const material = new THREE.MeshPhysicalMaterial({ color: color, metalness: 0.2, roughness: 0.1, clearcoat: 1.0, clearcoatRoughness: 0.1, flatShading: true });
-        const mesh = new THREE.Mesh(geometry, material); mesh.castShadow = true; mesh.receiveShadow = false; scene.add(mesh);
+        const mesh = new THREE.Mesh(geometry, material); 
+        mesh.castShadow = true; 
+        mesh.receiveShadow = false; 
+        scene.add(mesh);
+        
+        // 2. Cria a parte Física (Body)
         const body = new CANNON.Body({ mass: 5, shape: shape, linearDamping: 0.5, angularDamping: angularDamping, material: world.defaultContactMaterial.materials[1] });
-        body.position.set((Math.random()-0.5)*2, 8, (Math.random()-0.5)*2); body.quaternion.set(Math.random(), Math.random(), Math.random(), Math.random());
-        world.addBody(body); diceObjects.push({ mesh, body, type: sides, stopped: false });
-        updateDiceButtonUI(sides, 1); clearMagicEffects();
-        playSound('click'); 
+        body.position.set((Math.random()-0.5)*2, 8, (Math.random()-0.5)*2); 
+        body.quaternion.set(Math.random(), Math.random(), Math.random(), Math.random());
+        
+        // --- AQUI ESTÁ A CONEXÃO MÁGICA ---
+        // Dizemos ao dado: "Toda vez que você bater em algo, chame a função de som"
+        body.addEventListener("collide", handleDiceCollision);
+        
+        world.addBody(body); 
+        diceObjects.push({ mesh, body, type: sides, stopped: false });
+        
+        updateDiceButtonUI(sides, 1); 
+        clearMagicEffects();
+        
+        // playSound('click'); // Sugestão: Deixe comentado/removido para evitar som duplo (o clique do botão já faz o som)
+        
     } catch (e) { console.error("Erro no dado D" + sides, e); }
 }
 
@@ -426,9 +478,46 @@ function createNumberLabel(text, colorHex) {
     const m = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }); const sp = new THREE.Sprite(m); sp.scale.set(0.1,0.1,1); sp.renderOrder = 999; return sp;
 }
 function showFloatingResult(diceObj, value) {
-    const char = campaign.characters[activeCharIndex]; const color = char ? char.color : '#ffffff'; 
-    const sprite = createNumberLabel(value.toString(), color); sprite.position.copy(diceObj.mesh.position); sprite.position.y += 0.8; scene.add(sprite);
+    const char = campaign.characters[activeCharIndex]; 
+    const color = char ? char.color : '#ffffff'; 
+
+    // 1. Cria o número flutuante (Texto 3D)
+    const sprite = createNumberLabel(value.toString(), color); 
+    sprite.position.copy(diceObj.mesh.position); 
+    sprite.position.y += 0.8; 
+    scene.add(sprite);
+
+    // 2. Adiciona ao sistema de partículas/efeitos visuais
     magicEffects.push({ mainSprite: sprite, life: 0, maxLife: 100, color: color, particles: [] });
+
+    // --- LÓGICA DO D20 (SOM + SEU EFEITO VISUAL PREMIUM) ---
+    if (diceObj.type === 20) {
+        if (value === 20) {
+            // === SUCESSO CRÍTICO (NAT 20) ===
+            playSound('crit'); // Toca o som de vitória
+            
+            // Adiciona suas classes CSS no corpo da página
+            document.body.classList.add("crit-success-flash", "shake-effect");
+            
+            // Remove as classes depois de 1 segundo (tempo da sua animação)
+            setTimeout(() => {
+                document.body.classList.remove("crit-success-flash", "shake-effect");
+            }, 4000);
+
+        } else if (value === 1) {
+            // === FALHA CRÍTICA (NAT 1) ===
+            playSound('fumble'); 
+            
+            // MUDANÇA AQUI: Nome novo 'nat1-effect'
+            document.body.classList.add("nat1-effect", "shake-effect");
+            
+            // Confirme se este número é 4000
+            setTimeout(() => {
+                // MUDANÇA AQUI TAMBÉM:
+                document.body.classList.remove("nat1-effect", "shake-effect");
+            }, 4000);
+        }
+    }
 }
 function clearMagicEffects() { magicEffects.forEach(effect => { scene.remove(effect.mainSprite); effect.particles.forEach(p => scene.remove(p.mesh)); }); magicEffects = []; }
 function startCharging() { if (diceObjects.length === 0 || isRolling) return; isPressing = true; clearMagicEffects(); pressPower = 0.3; playSound('hold'); const bar = document.getElementById("powerBar"); const btn = document.getElementById("rollBtn"); pressTimer = setInterval(() => { if (!isPressing) return; pressPower += 0.05; if (pressPower >= 1.5) pressPower = 1.5; const percent = Math.min((pressPower / 1.5) * 100, 100); bar.style.width = percent + "%"; if (percent >= 100) btn.classList.add("charged"); }, 40); }
@@ -536,4 +625,44 @@ function setupEventListeners() {
     const clearBtn = document.getElementById("clearBtn"); if(clearBtn) clearBtn.onclick = clearDice; 
     const histBtn = document.getElementById("toggleHistoryBtn"); if(histBtn) histBtn.onclick = () => document.getElementById("historyPanel").classList.toggle("open"); 
     window.addEventListener('resize', refreshCanvasSize); 
+}
+// --- INTELIGÊNCIA DE ÁUDIO DE COLISÃO ---
+let lastCollisionTime = 0;
+
+function handleDiceCollision(e) {
+    // ... (código anterior de pegar velocidade e debounce) ...
+    const velocity = Math.abs(e.contact.getImpactVelocityAlongNormal());
+    if (velocity < 0.5) return;
+
+    const now = Date.now();
+    if (now - lastCollisionTime < 40) return; 
+    lastCollisionTime = now;
+
+    // Lógica de seleção do som (mantém igual)
+    let soundIndex = 0;
+    if (velocity < 2)       soundIndex = 0;
+    else if (velocity < 5)  soundIndex = 1;
+    else if (velocity < 8)  soundIndex = 2;
+    else if (velocity < 12) soundIndex = 3;
+    else                    soundIndex = 4;
+
+    if (sounds.collides && sounds.collides[soundIndex]) {
+        const audio = sounds.collides[soundIndex].cloneNode();
+        
+        // --- AQUI ESTÁ O AUMENTO DE VOLUME ---
+        
+        // 1. Cálculo Base: Aumentei o divisor (antes /10, agora /6)
+        // Isso faz o volume chegar no máximo muito mais rápido.
+        let vol = velocity / 3; 
+
+        // 2. Volume Mínimo (Piso): Aumentei de 0.3 para 0.5
+        // Assim, mesmo toques leves já soam audíveis.
+        vol = Math.max(vol, 0.8); 
+
+        // 3. Limite de Segurança (Teto): O volume nunca pode passar de 1.0
+        audio.volume = Math.min(vol, 1.0);
+        
+        audio.playbackRate = 0.9 + Math.random() * 0.2; 
+        audio.play().catch(() => {});
+    }
 }

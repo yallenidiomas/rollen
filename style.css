@@ -244,11 +244,56 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
     color: var(--gold);
     border-color: var(--gold-dim);
 }
-@keyframes shakeScreen { 0% { transform: translateX(0); } 25% { transform: translateX(-6px) rotate(-1deg); } 75% { transform: translateX(6px) rotate(1deg); } }
-.shake-effect { animation: shakeScreen 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-.crit-success-flash::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; animation: flashFade 1s forwards; pointer-events: none; background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%); }
-.crit-fail-flash::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; animation: flashFade 1s forwards; pointer-events: none; background: radial-gradient(circle, rgba(180, 0, 0, 0.6) 0%, transparent 70%); }
-@keyframes flashFade { 0% { opacity: 1; } 100% { opacity: 0; } }
+/* --- TREMOR (SHAKE) --- */
+@keyframes shakeScreen { 
+    0% { transform: translateX(0); } 
+    25% { transform: translateX(-6px) rotate(-1deg); } 
+    75% { transform: translateX(6px) rotate(1deg); } 
+}
+
+.shake-effect { 
+    animation: shakeScreen 0.1s cubic-bezier(.36,.07,.19,.97) both infinite !important; 
+}
+
+/* --- FADE LONGO (4 Segundos) --- */
+@keyframes longFadeOut {
+    0% { opacity: 1; }
+    60% { opacity: 1; }   
+    100% { opacity: 0; }  
+}
+
+/* --- CONFIGURAÇÃO GERAL --- */
+.crit-success-flash::before,
+.nat1-effect::before {  /* <--- NOME NOVO AQUI */
+    content: ""; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    z-index: 9999; 
+    pointer-events: none; 
+    
+    /* Força total nos 4 segundos */
+    animation: longFadeOut 4s ease-out forwards !important; 
+}
+
+/* --- CORES --- */
+.crit-success-flash::before {
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%); 
+}
+
+/* <--- NOME NOVO AQUI TAMBÉM */
+.nat1-effect::before {
+    background: radial-gradient(circle, rgba(180, 0, 0, 0.6) 0%, transparent 70%); 
+}
+
+/* --- CORES ESPECÍFICAS --- */
+.crit-success-flash::before {
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%); 
+}
+
+.crit-fail-flash::before {
+    background: radial-gradient(circle, rgba(180, 0, 0, 0.6) 0%, transparent 70%); 
+}
 /* --- ESTILO DO HISTÓRICO (PREMIUM) --- */
 
 /* Remove bolinhas da lista */
