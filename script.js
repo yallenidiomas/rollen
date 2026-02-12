@@ -61,6 +61,7 @@ function playSound(type) {
     if (type === 'roll') audio.volume = 1.0;
     else if (type === 'shoot') audio.volume = 0.2;
     else if (type === 'touch') audio.volume = 0.3;
+    else if (type === 'click') audio.volume = 0.3;
     else audio.volume = 1.0; // Click e Start
 
     // Variação de tom para não ficar robótico
@@ -591,26 +592,39 @@ function updateHistoryUI() {
 function animate() { requestAnimationFrame(animate); if(world) world.step(1/60); diceObjects.forEach(d => { if(d.mesh && d.body) { d.mesh.position.copy(d.body.position); d.mesh.quaternion.copy(d.body.quaternion); } }); for (let i = magicEffects.length - 1; i >= 0; i--) { const effect = magicEffects[i]; effect.life++; if (effect.life < 100) { effect.mainSprite.position.y += 0.015; if (effect.life < 20) { const p = effect.life/20; effect.mainSprite.scale.set(p*2.5, p*2.5, 1); effect.mainSprite.material.opacity = p; } else if (effect.life > 80) { effect.mainSprite.material.opacity = (100 - effect.life) / 20; } } if (effect.life < 60 && Math.random() > 0.3) { const pMat = new THREE.SpriteMaterial({ map: sparkleTexture, transparent: true, color: effect.color, opacity: 0.8, blending: THREE.AdditiveBlending }); const p = new THREE.Sprite(pMat); p.position.copy(effect.mainSprite.position); p.position.x += (Math.random() - 0.5) * 0.5; p.position.y -= 0.2; p.scale.set(0.3, 0.3, 1); scene.add(p); effect.particles.push({ mesh: p, age: 0 }); } for (let j = effect.particles.length - 1; j >= 0; j--) { const p = effect.particles[j]; p.age++; p.mesh.position.y -= 0.005; p.mesh.material.opacity -= 0.03; p.mesh.scale.multiplyScalar(0.95); if (p.mesh.material.opacity <= 0) { scene.remove(p.mesh); effect.particles.splice(j, 1); } } if (effect.life >= 100 && effect.particles.length === 0) { scene.remove(effect.mainSprite); magicEffects.splice(i, 1); } } if(renderer && scene && camera) renderer.render(scene, camera); }
 
 // --- DETECTOR GLOBAL DE CLIQUES ---
+// --- DETECTOR GLOBAL DE CLIQUES (CORRIGIDO) ---
 document.addEventListener('click', (e) => {
+    
     // 1. Botão INICIAR JOGO
     if (e.target.id === 'startCampaignBtn') {
         playSound('start');
         return;
     }
 
-    // 2. ABAS DE PERSONAGEM e AVATARES (Prioridade Alta)
-    // O .closest procura a classe subindo a árvore do HTML
+    // 2. ABAS DE PERSONAGEM e AVATARES
     if (e.target.closest('.char-tab') || e.target.closest('.avatar-option')) {
         playSound('touch'); 
-        return; // <--- OBRIGATÓRIO: Para aqui e não toca o click
+        return; 
     }
 
-    // 3. Botão ROLAR (Ignora som aqui, pois já tem no mousedown)
+    // 3. Botão ROLAR (Ignora som aqui, pois já tem lógica de carregar)
     if (e.target.closest('#rollBtn')) {
         return;
     }
-});
 
+    // --- 4. NOVO: BOTÕES DE DADOS E GERAIS (O QUE FALTAVA) ---
+    // Verifica se clicou em QUALQUER botão, input, ícone ou seletor
+    if (
+        e.target.closest('button') || 
+        e.target.closest('.dice-btn') || // Classe provável dos seus botões de dados
+        e.target.closest('input') || 
+        e.target.closest('select') || 
+        e.target.closest('i')
+    ) {
+        // Toca o som de clique genérico
+        playSound('click');
+    }
+});
 function setupEventListeners() { 
     const btn = document.getElementById("rollBtn"); 
     if (btn) { 
