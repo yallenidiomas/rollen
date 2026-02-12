@@ -117,6 +117,8 @@ let activeCharIndex = 0;
 let selectedAvatarKey = 'master';
 let diceObjects = []; 
 let magicEffects = [];
+let hasCritHappened = false; // <--- NOVA VARIÁVEL DE CONTROLE
+let currentSpecialSound = null;   // Guarda o áudio tocando para podermos cortar ele
 let world, scene, camera, renderer;
 let isRolling = false;
 let pressTimer = null;
@@ -482,41 +484,68 @@ function showFloatingResult(diceObj, value) {
     const char = campaign.characters[activeCharIndex]; 
     const color = char ? char.color : '#ffffff'; 
 
-    // 1. Cria o número flutuante (Texto 3D)
     const sprite = createNumberLabel(value.toString(), color); 
     sprite.position.copy(diceObj.mesh.position); 
     sprite.position.y += 0.8; 
     scene.add(sprite);
-
-    // 2. Adiciona ao sistema de partículas/efeitos visuais
+    
     magicEffects.push({ mainSprite: sprite, life: 0, maxLife: 100, color: color, particles: [] });
 
-    // --- LÓGICA DO D20 (SOM + SEU EFEITO VISUAL PREMIUM) ---
+    // --- LÓGICA DE HIERARQUIA (20 > 1) ---
     if (diceObj.type === 20) {
+        
         if (value === 20) {
-            // === SUCESSO CRÍTICO (NAT 20) ===
-            playSound('crit'); // Toca o som de vitória
-            
-            // Adiciona suas classes CSS no corpo da página
+            // === SUCESSO CRÍTICO (O REI) ===
+            hasCritHappened = true; // Marca território
+
+            // 1. CORTA O SOM DA FALHA (Se estiver tocando)
+            if (currentSpecialSound) {
+                currentSpecialSound.pause();
+                currentSpecialSound.currentTime = 0;
+            }
+
+            // 2. TOCA O SOM DA VITÓRIA (E guarda na variável global)
+            // (Usamos o cloneNode para poder tocar, mas guardamos a referência)
+            if (sounds.crit) {
+                currentSpecialSound = sounds.crit.cloneNode();
+                currentSpecialSound.volume = 1.0; 
+                currentSpecialSound.play().catch(()=>{});
+            }
+
+            // 3. EFEITOS VISUAIS (Remove o vermelho, bota o dourado)
+            document.body.classList.remove("nat1-effect"); 
             document.body.classList.add("crit-success-flash", "shake-effect");
             
-            // Remove as classes depois de 1 segundo (tempo da sua animação)
+            // Timer para limpar
             setTimeout(() => {
                 document.body.classList.remove("crit-success-flash", "shake-effect");
             }, 4000);
 
         } else if (value === 1) {
-            // === FALHA CRÍTICA (NAT 1) ===
-            playSound('fumble'); 
+            // === FALHA CRÍTICA (O SÚDITO) ===
             
-            // MUDANÇA AQUI: Nome novo 'nat1-effect'
-            document.body.classList.add("nat1-effect", "shake-effect");
-            
-            // Confirme se este número é 4000
-            setTimeout(() => {
-                // MUDANÇA AQUI TAMBÉM:
-                document.body.classList.remove("nat1-effect", "shake-effect");
-            }, 4000);
+            // Só faz barulho se o Rei (20) NÃO estiver na mesa
+            if (!hasCritHappened) {
+                
+                // Se já tiver um som especial tocando (ex: outro 1), ignora para não virar bagunça
+                if (currentSpecialSound && !currentSpecialSound.paused) return;
+
+                // Toca a Falha
+                if (sounds.fumble) {
+                    currentSpecialSound = sounds.fumble.cloneNode();
+                    currentSpecialSound.volume = 1.0;
+                    currentSpecialSound.play().catch(()=>{});
+                }
+
+                document.body.classList.add("nat1-effect", "shake-effect");
+                
+                setTimeout(() => {
+                    // Só remove se não tiver virado sucesso nesse meio tempo
+                    if (!hasCritHappened) {
+                        document.body.classList.remove("nat1-effect", "shake-effect");
+                    }
+                }, 4000);
+            }
         }
     }
 }
@@ -527,6 +556,7 @@ function releaseRoll() { if (!isPressing) return; isPressing = false; if (pressT
 // --- ROLAGEM DE DADOS (COM SOM E FÍSICA) ---
 function rollAllDice(forceMultiplier) {
     isRolling = true; 
+    hasCritHappened = false; // <--- RESETA AQUI (Ninguém tirou 20 ainda)
     clearMagicEffects(); 
     
     // CORREÇÃO: Chama a função genérica pedindo o som de "roll"
