@@ -9,13 +9,25 @@
     --font-title: 'Cinzel', serif; --font-body: 'Lato', sans-serif;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent;
+    
+    /* BLOQUEIA O ZOOM DE DUPLO TOQUE NO IOS */
+    touch-action: manipulation; 
+}
 
 body {
     margin: 0; padding: 0; width: 100%; height: 100%;
     background-color: var(--bg-wood-dark); overflow: hidden;
-    font-family: var(--font-body); color: #fff; user-select: none;
+    font-family: var(--font-body); color: #fff; 
+    
     display: flex; flex-direction: column;
+
+    /* BLOQUEIA A SELEÇÃO DE TEXTO E MENUS DE SEGURAR O TOQUE */
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -webkit-touch-callout: none; /* Remove menu de copiar/colar ao segurar */
 }
 
 /* --- CORREÇÃO CRÍTICA DO LAYOUT: COLUNA --- */
@@ -118,22 +130,99 @@ body {
 }
 /* Painéis e Botões */
 #diceSelector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+/* 1. ESTADO NORMAL (CINZA - ILUMINAÇÃO VERTICAL) */
+/* --- ESTILO BASE DO BOTÃO (Compartilhado) --- */
 .dice-btn {
-    background: linear-gradient(145deg, var(--stone-light), var(--stone-dark));
-    color: #eceff1; height: 55px; border-radius: 10px; position: relative; 
-    font-family: var(--font-title); font-size: 1.3rem; font-weight: bold;
+    color: #eceff1; 
+    height: 55px; 
+    border-radius: 10px; 
+    position: relative; 
+    font-family: var(--font-title); 
+    font-size: 1.3rem; 
+    font-weight: bold;
     border: 1px solid #263238; 
-    box-shadow: inset 1px 1px 0 rgba(255,255,255,0.1), 0 4px 0 #102027, 0 5px 10px rgba(0,0,0,0.5);
-    display: flex; justify-content: center; align-items: center; text-shadow: 0 -1px 1px #000;
+    display: flex; justify-content: center; align-items: center; 
+    text-shadow: 0 -1px 1px #000;
+    transition: transform 0.1s, box-shadow 0.1s;
+    
+    /* Sombra base (chão) igual para todos */
+    box-shadow: 0 4px 0 #102027, 0 5px 10px rgba(0,0,0,0.5);
 }
-.dice-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #102027, inset 0 0 10px #000; }
-/* Botão de dado selecionado (Amarelo Dourado) */
+
+/* --- ILUMINAÇÃO DIRECIONAL (A Mágica Acontece Aqui) --- */
+
+/* 1. COLUNA ESQUERDA (Luz vindo da Direita/Centro) */
+.dice-btn:nth-child(3n+1) {
+    /* Gradiente aponta para a Esquerda (Escuro na esq, Claro na dir) */
+    background: linear-gradient(to left bottom, var(--stone-light), var(--stone-dark));
+    /* Brilho interno forte na borda DIREITA */
+    box-shadow: inset -2px 1px 0 rgba(255,255,255,0.15), 0 4px 0 #102027;
+}
+
+/* 2. COLUNA DO MEIO (Luz vindo de Cima) */
+.dice-btn:nth-child(3n+2) {
+    /* Gradiente Vertical Padrão */
+    background: linear-gradient(to bottom, var(--stone-light), var(--stone-dark));
+    /* Brilho interno centralizado no TOPO */
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 0 #102027;
+}
+
+/* 3. COLUNA DIREITA (Luz vindo da Esquerda/Centro) */
+.dice-btn:nth-child(3n+3) {
+    /* Gradiente aponta para a Direita (Claro na esq, Escuro na dir) */
+    background: linear-gradient(to right bottom, var(--stone-light), var(--stone-dark));
+    /* Brilho interno forte na borda ESQUERDA */
+    box-shadow: inset 2px 1px 0 rgba(255,255,255,0.15), 0 4px 0 #102027;
+}
+
+/* --- ESTADOS DE CLIQUE (Active) --- */
+.dice-btn:not(.selected):active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #102027, inset 0 0 10px #000 !important; /* Remove o brilho direcional ao afundar */
+}
+
+
+/* --- ESTADO SELECIONADO (DOURADO) --- */
+/* Mantemos a mesma lógica de direção, mas com cores Douradas */
+
 .dice-btn.selected {
-    background: linear-gradient(to bottom, #fbc02d, #f57f17) !important; /* Força o amarelo */
-    color: #263238 !important; /* Texto escuro para contraste */
-    border-color: #fff;
-    box-shadow: 0 0 15px #c68400; /* Brilho dourado */
+    color: #3e2723 !important;
+    border-color: #ffe082;
     text-shadow: none;
+    transform: translateY(0);
+}
+
+/* Dourado: Coluna Esquerda */
+.dice-btn.selected:nth-child(3n+1) {
+    background: linear-gradient(to left bottom, #ffd740, #ff8f00) !important;
+    box-shadow: inset -2px 1px 0 rgba(255,255,255,0.5), 0 4px 0 #bf360c, 0 0 15px rgba(255, 160, 0, 0.6);
+}
+
+/* Dourado: Coluna Meio */
+.dice-btn.selected:nth-child(3n+2) {
+    background: linear-gradient(to bottom, #ffd740, #ff8f00) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 4px 0 #bf360c, 0 0 15px rgba(255, 160, 0, 0.6);
+}
+
+/* Dourado: Coluna Direita */
+.dice-btn.selected:nth-child(3n+3) {
+    background: linear-gradient(to right bottom, #ffd740, #ff8f00) !important;
+    box-shadow: inset 2px 1px 0 rgba(255,255,255,0.5), 0 4px 0 #bf360c, 0 0 15px rgba(255, 160, 0, 0.6);
+}
+
+/* Dourado Afundando */
+.dice-btn.selected:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #bf360c, inset 0 0 15px rgba(191, 54, 12, 0.6), 0 0 20px rgba(255, 160, 0, 0.8) !important;
+}
+
+/* 4. AFUNDANDO QUANDO JÁ É DOURADO */
+.dice-btn.selected:active {
+    transform: translateY(4px);
+    box-shadow: 
+        0 0 0 #bf360c,                         
+        inset 0 0 15px rgba(191, 54, 12, 0.6), 
+        0 0 20px rgba(255, 160, 0, 0.8);       
 }
 .dice-count { position: absolute; top: -6px; right: -6px; background: var(--gem-red); color: #fff; border: 2px solid #fff; border-radius: 50%; width: 24px; height: 24px; font-size: 0.9rem; font-weight: bold; display: flex; justify-content: center; align-items: center; display: none; }
 
@@ -388,4 +477,56 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
     height: 100%;     /* Força a imagem a caber na altura de 40px */
     object-fit: cover; /* Preenche sem distorcer */
     display: block;
+}
+/* Visor do MOD no Painel Principal */
+.modifier-wrapper {
+    cursor: pointer;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #5d4037;
+    border-radius: 8px;
+    padding: 5px 10px;
+    min-width: 60px;
+    text-align: center;
+    transition: background 0.2s;
+}
+.modifier-wrapper:active { background: rgba(255,255,255,0.1); }
+#modDisplay {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #ffb300;
+    font-family: 'Cinzel', serif;
+}
+
+/* Grid do Seletor */
+.mod-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    background: rgba(0,0,0,0.2);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.mod-btn {
+    background: linear-gradient(to bottom, var(--stone-light), var(--stone-dark));
+    border: 1px solid #263238;
+    color: white;
+    padding: 12px 0;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    box-shadow: 0 3px 0 #102027;
+    font-family: 'Lato', sans-serif;
+}
+
+.mod-btn.active {
+    background: linear-gradient(to bottom, #ffd740, #ff8f00);
+    color: #3e2723;
+    box-shadow: 0 3px 0 #bf360c;
+    border-color: #fff;
+}
+
+.mod-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #102027;
 }

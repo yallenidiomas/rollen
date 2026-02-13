@@ -7,75 +7,111 @@
 // --- SISTEMA DE SOM (ARQUIVOS LOCAIS) ---
 // --- SISTEMA DE SOM ---
 // --- SISTEMA DE SOM COM MULTI-CAMADAS ---
-const sounds = {
-    click:   new Audio('./click.mp3'),
-    touch:   new Audio('./touch.mp3'),
-    hold:    new Audio('./hold.mp3'),
-    shoot:   new Audio('./shoot.mp3'),
-    start:   new Audio('./start.mp3'),
-    crit:    new Audio('./crit.mp3'),   // Vitória (Nat 20)
-    fumble:  new Audio('./fumble.mp3'), // Falha Crítica (Nat 1)
-    
-    // Lista dos seus 5 sons de colisão
-    collides: [
-        new Audio('./collide1.mp3'), // [0] Mais agudo/leve
-        new Audio('./collide2.mp3'), // [1]
-        new Audio('./collide3.mp3'), // [2] Médio
-        new Audio('./collide4.mp3'), // [3]
-        new Audio('./collide5.mp3')  // [4] Mais grave/forte
-    ]
+// --- 2. SISTEMA DE SOM PROFISSIONAL (WEB AUDIO API) ---
+// Cria um único contexto de áudio para todo o app (resolve o "pisca-pisca" no iOS)
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+// Armazena os sons decodificados na memória (sem delay)
+const soundBuffers = {};
+let currentHoldSource = null; // Para controlar o som de 'hold'
+
+// Mapeamento dos arquivos
+const soundMap = {
+    'click': './click.mp3',
+    'touch': './touch.mp3',
+    'hold':  './hold.mp3',
+    'shoot': './shoot.mp3',
+    'start': './start.mp3',
+    'crit':  './crit.mp3',
+    'fumble':'./fumble.mp3',
+    // Colisões
+    'col0': './collide1.mp3',
+    'col1': './collide2.mp3',
+    'col2': './collide3.mp3',
+    'col3': './collide4.mp3',
+    'col4': './collide5.mp3'
 };
 
-// Pré-carrega todos para evitar atrasos
-Object.values(sounds).forEach(s => {
-    if(Array.isArray(s)) s.forEach(a => a.load());
-    else s.load();
-});
-
-// ESSA LINHA PRECISA ESTAR AQUI (FORA DE TUDO):
-let currentHoldSound = null;
-
-function playSound(type) {
-    if (!sounds[type]) return;
-
-    // Lógica Especial para o HOLD (Segurar)
-    if (type === 'hold') {
-        // Se já tiver um tocando, para ele antes de começar outro
-        if (currentHoldSound) {
-            currentHoldSound.pause();
-            currentHoldSound.currentTime = 0;
+// Função para carregar e decodificar todos os sons de uma vez
+async function preloadSounds() {
+    for (const [key, url] of Object.entries(soundMap)) {
+        try {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+            soundBuffers[key] = audioBuffer;
+        } catch (error) {
+            console.warn(`Erro ao carregar som: ${key} (${url})`, error);
         }
-        
-        currentHoldSound = sounds[type].cloneNode();
-        currentHoldSound.volume = 0.3;
-        // O loop garante que se você segurar por 10 segundos, o som não acaba
-        currentHoldSound.loop = true; 
-        currentHoldSound.play().catch(() => {});
-        return;
     }
-
-    // Lógica para todos os outros sons
-    const audio = sounds[type].cloneNode();
-    
-    // Volumes individuais
-    if (type === 'roll') audio.volume = 1.0;
-    else if (type === 'shoot') audio.volume = 0.2;
-    else if (type === 'touch') audio.volume = 0.3;
-    else if (type === 'click') audio.volume = 0.3;
-    else audio.volume = 1.0; // Click e Start
-
-    // Variação de tom para não ficar robótico
-    audio.playbackRate = 0.95 + Math.random() * 0.1;
-    
-    audio.play().catch(e => console.warn("Som bloqueado:", e));
 }
 
-// Função para CORTAR o som imediatamente
+// Inicia o carregamento
+preloadSounds();
+
+// Função Principal de Tocar
+function playSound(type, collisionIndex = null) {
+    // 1. Desbloqueio para iOS (Auto-resume)
+    // Se o contexto estiver suspenso (comum no primeiro toque), reativa
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+    }
+
+    // Define qual buffer tocar
+    let bufferKey = type;
+    
+    // Se for colisão, usa o índice específico (col0 a col4)
+    if (type === 'collides' && collisionIndex !== null) {
+        bufferKey = 'col' + collisionIndex;
+    }
+
+    const buffer = soundBuffers[bufferKey];
+    if (!buffer) return; // Se não carregou ainda, ignora
+
+    // 2. Criação da Fonte (Source) e Volume (Gain)
+    const source = audioCtx.createBufferSource();
+    const gainNode = audioCtx.createGain();
+    
+    source.buffer = buffer;
+
+    // 3. Configuração de Volume por Tipo
+    if (type === 'roll') gainNode.gain.value = 1.0;
+    else if (type === 'shoot') gainNode.gain.value = 0.3;
+    else if (type === 'touch' || type === 'click') gainNode.gain.value = 0.4;
+    else if (type === 'collides') gainNode.gain.value = 0.8; // Colisões mais altas
+    else gainNode.gain.value = 1.0;
+
+    // 4. Variação de Tom (Pitch) para naturalidade
+    // Varia entre 0.95 e 1.05
+    source.playbackRate.value = 0.95 + Math.random() * 0.1;
+
+    // 5. Conexões
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    // 6. Lógica Especial: HOLD (Loop)
+    if (type === 'hold') {
+        if (currentHoldSource) {
+            try { currentHoldSource.stop(); } catch(e){}
+        }
+        source.loop = true;
+        currentHoldSource = source;
+    }
+
+    // Tocar agora
+    source.start(0);
+}
+
+// Função para parar o som de carregar
 function stopHoldSound() {
-    if (currentHoldSound) {
-        currentHoldSound.pause();
-        currentHoldSound.currentTime = 0;
-        currentHoldSound = null;
+    if (currentHoldSource) {
+        try {
+            currentHoldSource.stop(); // Para o som suavemente
+            currentHoldSource = null;
+        } catch (e) {
+            // Ignora erro se o som já tiver parado
+        }
     }
 }
 // (O restante do código continua igual: const avatars = { ... )
@@ -127,6 +163,7 @@ let isPressing = false;
 let sparkleTexture = null;
 let walls = { left: null, right: null, top: null, bottom: null };
 let isGameRunning = false;
+let clock = new THREE.Clock();
 
 // --- 2. INICIALIZAÇÃO ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -134,6 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderAvatarSelection(); 
     setupEventListeners(); 
     setupColorPicker(); 
+    setupModPicker();
     loadData();
     try { initPhysicsAndGraphics(); animate(); } catch (error) { console.error("Erro 3D:", error); }
 });
@@ -328,33 +366,43 @@ function renderTabs() {
 }
 
 function switchTab(i) {
-    // Se clicar na mesma aba, não faz nada (e o detector global tocará o som Touch)
+    // Se clicar na mesma aba, não faz nada
     if(i === activeCharIndex && campaign.characters.length > 0) return;
 
     const modInput = document.getElementById("modInput");
-    
-    // Salva modificador do personagem anterior antes de trocar
+    const modDisplay = document.getElementById("modDisplay");
+
+    // 1. SALVA os dados do personagem ATUAL antes de mudar o índice
     if (activeCharIndex >= 0 && activeCharIndex < campaign.characters.length) {
         const oldChar = campaign.characters[activeCharIndex];
-        if (modInput) oldChar.modifier = parseInt(modInput.value) || 0;
+        if (modInput) {
+            oldChar.modifier = parseInt(modInput.value) || 0;
+        }
         
-        // Lógica de incrementar turno se necessário
-        if(oldChar.history.some(h => h.turn === oldChar.turnCount)) oldChar.turnCount++;
+        // Lógica de incremento de turno (opcional, mantida do seu código)
+        if(oldChar.history.some(h => h.turn === oldChar.turnCount)) {
+            oldChar.turnCount++;
+        }
     }
 
-    // Troca o índice
+    // 2. TROCA o índice para o novo personagem
     activeCharIndex = i; 
     const char = campaign.characters[activeCharIndex];
 
-    // Atualiza a UI
-    if (modInput) modInput.value = char.modifier || 0;
-    
+    // 3. CARREGA os dados do NOVO personagem para a interface
+    if (char) {
+        const val = char.modifier || 0;
+        if (modInput) modInput.value = val;
+        if (modDisplay) modDisplay.innerText = (val > 0 ? "+" : "") + val;
+    }
+
+    // 4. ATUALIZA o restante da UI
     renderTabs(); 
     clearDice(); 
     updateHistoryUI(); 
     saveData();
 
-    // Atualiza o Avatar no Centro da Tela
+    // Atualiza o Avatar Central
     const avatarDisplay = document.getElementById("currentAvatarDisplay");
     if (avatarDisplay) { 
         avatarDisplay.innerHTML = char.avatar; 
@@ -363,11 +411,9 @@ function switchTab(i) {
         if(svg) svg.style.fill = char.color; 
     }
 
-    // Atualiza a cor do texto do resultado
+    // Atualiza a cor do resultado
     const resTotal = document.getElementById("resultTotal"); 
     if(resTotal) resTotal.style.color = char.color;
-    
-    // NÃO COLOQUE playSound AQUI! Deixe o detector cuidar disso.
 }
 
 // --- MENU ---
@@ -420,8 +466,21 @@ function updateWallPositions() {
 function refreshCanvasSize() {
     const container = document.getElementById("canvasContainer");
     if (container && camera && renderer) {
-        const width = container.clientWidth; const height = container.clientHeight;
-        renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix(); updateWallPositions();
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        renderer.setSize(width, height);
+        
+        // OTIMIZAÇÃO CRÍTICA PARA MOBILE:
+        // Limita a densidade de pixels a 1.5x. Telas retina costumam ser 3x ou 4x,
+        // o que é exagero para 3D e deixa o celular lento.
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        
+        // Mantém sua lógica de paredes
+        if (typeof updateWallPositions === 'function') updateWallPositions();
     }
 }
 function createDiceGeometry(type, size) {
@@ -496,27 +555,16 @@ function showFloatingResult(diceObj, value) {
         
         if (value === 20) {
             // === SUCESSO CRÍTICO (O REI) ===
-            hasCritHappened = true; // Marca território
+            hasCritHappened = true; 
 
-            // 1. CORTA O SOM DA FALHA (Se estiver tocando)
-            if (currentSpecialSound) {
-                currentSpecialSound.pause();
-                currentSpecialSound.currentTime = 0;
-            }
+            // 1. TOCA O SOM DA VITÓRIA (Novo Sistema Blindado)
+            // Não precisamos mais de 'sounds.crit.cloneNode()', apenas chamamos:
+            playSound('crit');
 
-            // 2. TOCA O SOM DA VITÓRIA (E guarda na variável global)
-            // (Usamos o cloneNode para poder tocar, mas guardamos a referência)
-            if (sounds.crit) {
-                currentSpecialSound = sounds.crit.cloneNode();
-                currentSpecialSound.volume = 1.0; 
-                currentSpecialSound.play().catch(()=>{});
-            }
-
-            // 3. EFEITOS VISUAIS (Remove o vermelho, bota o dourado)
+            // 2. EFEITOS VISUAIS
             document.body.classList.remove("nat1-effect"); 
             document.body.classList.add("crit-success-flash", "shake-effect");
             
-            // Timer para limpar
             setTimeout(() => {
                 document.body.classList.remove("crit-success-flash", "shake-effect");
             }, 4000);
@@ -527,20 +575,12 @@ function showFloatingResult(diceObj, value) {
             // Só faz barulho se o Rei (20) NÃO estiver na mesa
             if (!hasCritHappened) {
                 
-                // Se já tiver um som especial tocando (ex: outro 1), ignora para não virar bagunça
-                if (currentSpecialSound && !currentSpecialSound.paused) return;
-
-                // Toca a Falha
-                if (sounds.fumble) {
-                    currentSpecialSound = sounds.fumble.cloneNode();
-                    currentSpecialSound.volume = 1.0;
-                    currentSpecialSound.play().catch(()=>{});
-                }
+                // Toca a Falha (Novo Sistema Blindado)
+                playSound('fumble');
 
                 document.body.classList.add("nat1-effect", "shake-effect");
                 
                 setTimeout(() => {
-                    // Só remove se não tiver virado sucesso nesse meio tempo
                     if (!hasCritHappened) {
                         document.body.classList.remove("nat1-effect", "shake-effect");
                     }
@@ -550,18 +590,95 @@ function showFloatingResult(diceObj, value) {
     }
 }
 function clearMagicEffects() { magicEffects.forEach(effect => { scene.remove(effect.mainSprite); effect.particles.forEach(p => scene.remove(p.mesh)); }); magicEffects = []; }
-function startCharging() { if (diceObjects.length === 0 || isRolling) return; isPressing = true; clearMagicEffects(); pressPower = 0.3; playSound('hold'); const bar = document.getElementById("powerBar"); const btn = document.getElementById("rollBtn"); pressTimer = setInterval(() => { if (!isPressing) return; pressPower += 0.05; if (pressPower >= 1.5) pressPower = 1.5; const percent = Math.min((pressPower / 1.5) * 100, 100); bar.style.width = percent + "%"; if (percent >= 100) btn.classList.add("charged"); }, 40); }
-function releaseRoll() { if (!isPressing) return; isPressing = false; if (pressTimer) clearInterval(pressTimer); stopHoldSound(); document.getElementById("powerBar").style.width = "0%"; document.getElementById("rollBtn").classList.remove("charged"); if (diceObjects.length > 0 && !isRolling) {playSound('shoot'); rollAllDice(pressPower);} pressPower = 0; }
+let chargeAnimId = null; // Variável para controlar o loop de animação da tela
+let lastFrameTime = 0;
+
+function startCharging() {
+    if (diceObjects.length === 0 || isRolling) return;
+    
+    isPressing = true;
+    clearMagicEffects();
+    
+    // Começa do zero ou valor mínimo
+    pressPower = 0.3; 
+    playSound('hold');
+
+    const bar = document.getElementById("powerBar");
+    const btn = document.getElementById("rollBtn");
+
+    if (chargeAnimId) cancelAnimationFrame(chargeAnimId);
+
+    // --- CONFIGURAÇÃO DE SINCRONIA ---
+    const TARGET_DURATION = 1000; // 1.4 segundos (Tempo exato do seu som)
+    const MAX_POWER = 1.5;
+    const POWER_RANGE = MAX_POWER - 0.3; // Quanto falta pra encher (1.5 - 0.3 = 1.2)
+    
+    // Marca o tempo inicial de alta precisão
+    lastFrameTime = performance.now();
+
+    const animateCharge = (currentTime) => {
+        if (!isPressing) return;
+
+        // Calcula quanto tempo passou desde o último quadro (Delta Time)
+        const deltaTime = currentTime - lastFrameTime;
+        lastFrameTime = currentTime;
+
+        // MATEMÁTICA:
+        // Se queremos encher 1.2 de força em 1400ms...
+        // Velocidade = 1.2 / 1400 = 0.00085 por milissegundo.
+        // Multiplicamos pelo tempo que passou neste quadro.
+        const increment = (POWER_RANGE / TARGET_DURATION) * deltaTime;
+
+        pressPower += increment;
+
+        // Trava no máximo
+        if (pressPower >= MAX_POWER) pressPower = MAX_POWER;
+
+        // Atualiza visual
+        const percent = Math.min((pressPower / MAX_POWER) * 100, 100);
+        bar.style.width = percent + "%";
+
+        if (percent >= 100) btn.classList.add("charged");
+
+        // Continua o loop se não encheu
+        if (pressPower < MAX_POWER) {
+            chargeAnimId = requestAnimationFrame(animateCharge);
+        }
+    };
+
+    // Inicia o loop
+    chargeAnimId = requestAnimationFrame(animateCharge);
+}
+
+function releaseRoll() {
+    if (!isPressing) return;
+    
+    isPressing = false;
+    
+    if (chargeAnimId) {
+        cancelAnimationFrame(chargeAnimId);
+        chargeAnimId = null;
+    }
+    
+    stopHoldSound();
+    
+    document.getElementById("powerBar").style.width = "0%";
+    document.getElementById("rollBtn").classList.remove("charged");
+    
+    if (diceObjects.length > 0 && !isRolling) {
+        playSound('shoot'); 
+        rollAllDice(pressPower);
+    }
+    
+    pressPower = 0;
+}
 
 // --- ROLAGEM DE DADOS (COM SOM E FÍSICA) ---
 function rollAllDice(forceMultiplier) {
     isRolling = true; 
     hasCritHappened = false; // <--- RESETA AQUI (Ninguém tirou 20 ainda)
     clearMagicEffects(); 
-    
-    // CORREÇÃO: Chama a função genérica pedindo o som de "roll"
-    setTimeout(() => playSound('roll'), 1000);
-    
+      
     const force = forceMultiplier * 25; 
     updateResultDisplay("Rolando...", "?");
     
@@ -619,8 +736,79 @@ function updateHistoryUI() {
     }); 
 }
 
-function animate() { requestAnimationFrame(animate); if(world) world.step(1/60); diceObjects.forEach(d => { if(d.mesh && d.body) { d.mesh.position.copy(d.body.position); d.mesh.quaternion.copy(d.body.quaternion); } }); for (let i = magicEffects.length - 1; i >= 0; i--) { const effect = magicEffects[i]; effect.life++; if (effect.life < 100) { effect.mainSprite.position.y += 0.015; if (effect.life < 20) { const p = effect.life/20; effect.mainSprite.scale.set(p*2.5, p*2.5, 1); effect.mainSprite.material.opacity = p; } else if (effect.life > 80) { effect.mainSprite.material.opacity = (100 - effect.life) / 20; } } if (effect.life < 60 && Math.random() > 0.3) { const pMat = new THREE.SpriteMaterial({ map: sparkleTexture, transparent: true, color: effect.color, opacity: 0.8, blending: THREE.AdditiveBlending }); const p = new THREE.Sprite(pMat); p.position.copy(effect.mainSprite.position); p.position.x += (Math.random() - 0.5) * 0.5; p.position.y -= 0.2; p.scale.set(0.3, 0.3, 1); scene.add(p); effect.particles.push({ mesh: p, age: 0 }); } for (let j = effect.particles.length - 1; j >= 0; j--) { const p = effect.particles[j]; p.age++; p.mesh.position.y -= 0.005; p.mesh.material.opacity -= 0.03; p.mesh.scale.multiplyScalar(0.95); if (p.mesh.material.opacity <= 0) { scene.remove(p.mesh); effect.particles.splice(j, 1); } } if (effect.life >= 100 && effect.particles.length === 0) { scene.remove(effect.mainSprite); magicEffects.splice(i, 1); } } if(renderer && scene && camera) renderer.render(scene, camera); }
+function animate() {
+    requestAnimationFrame(animate);
 
+    // Calcula o tempo real que passou desde o último quadro
+    const dt = clock.getDelta();
+
+    if (world) {
+        // CORREÇÃO DO SLOW MOTION:
+        // O Cannon.js agora avança baseado no tempo real (dt), não frame a frame.
+        // O '3' é o número máximo de passos para recuperar atraso (evita espirais de travamento).
+        world.step(1/60, dt, 3); 
+    }
+
+    diceObjects.forEach(d => {
+        if (d.mesh && d.body) {
+            d.mesh.position.copy(d.body.position);
+            d.mesh.quaternion.copy(d.body.quaternion);
+        }
+    });
+
+    // --- SUA LÓGICA ORIGINAL DE EFEITOS (PRESERVADA) ---
+    for (let i = magicEffects.length - 1; i >= 0; i--) {
+        const effect = magicEffects[i];
+        effect.life++;
+        if (effect.life < 100) {
+            effect.mainSprite.position.y += 0.015;
+            if (effect.life < 20) {
+                const p = effect.life / 20;
+                effect.mainSprite.scale.set(p * 2.5, p * 2.5, 1);
+                effect.mainSprite.material.opacity = p;
+            } else if (effect.life > 80) {
+                effect.mainSprite.material.opacity = (100 - effect.life) / 20;
+            }
+        }
+        if (effect.life < 60 && Math.random() > 0.3) {
+            const pMat = new THREE.SpriteMaterial({
+                map: sparkleTexture,
+                transparent: true,
+                color: effect.color,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            const p = new THREE.Sprite(pMat);
+            p.position.copy(effect.mainSprite.position);
+            p.position.x += (Math.random() - 0.5) * 0.5;
+            p.position.y -= 0.2;
+            p.scale.set(0.3, 0.3, 1);
+            scene.add(p);
+            effect.particles.push({
+                mesh: p,
+                age: 0
+            });
+        }
+        for (let j = effect.particles.length - 1; j >= 0; j--) {
+            const p = effect.particles[j];
+            p.age++;
+            p.mesh.position.y -= 0.005;
+            p.mesh.material.opacity -= 0.03;
+            p.mesh.scale.multiplyScalar(0.95);
+            if (p.mesh.material.opacity <= 0) {
+                scene.remove(p.mesh);
+                effect.particles.splice(j, 1);
+            }
+        }
+        if (effect.life >= 100 && effect.particles.length === 0) {
+            scene.remove(effect.mainSprite);
+            magicEffects.splice(i, 1);
+        }
+    }
+    // ---------------------------------------------------
+
+    if (renderer && scene && camera) renderer.render(scene, camera);
+}
 // --- DETECTOR GLOBAL DE CLIQUES ---
 // --- DETECTOR GLOBAL DE CLIQUES (CORRIGIDO) ---
 document.addEventListener('click', (e) => {
@@ -654,6 +842,7 @@ document.addEventListener('click', (e) => {
         // Toca o som de clique genérico
         playSound('click');
     }
+    setupModPicker();
 });
 function setupEventListeners() { 
     const btn = document.getElementById("rollBtn"); 
@@ -674,39 +863,77 @@ function setupEventListeners() {
 let lastCollisionTime = 0;
 
 function handleDiceCollision(e) {
-    // ... (código anterior de pegar velocidade e debounce) ...
+    // 1. Calcula a intensidade da batida
+    // (O Cannon.js às vezes retorna valores negativos, por isso o Math.abs)
     const velocity = Math.abs(e.contact.getImpactVelocityAlongNormal());
+    
+    // Ignora toques muito leves (arrastar no chão)
     if (velocity < 0.5) return;
 
+    // 2. Debounce (Evita "metralhadora" de sons)
     const now = Date.now();
     if (now - lastCollisionTime < 40) return; 
     lastCollisionTime = now;
 
-    // Lógica de seleção do som (mantém igual)
+    // 3. Escolhe o som baseado na força
     let soundIndex = 0;
-    if (velocity < 2)       soundIndex = 0;
-    else if (velocity < 5)  soundIndex = 1;
-    else if (velocity < 8)  soundIndex = 2;
-    else if (velocity < 12) soundIndex = 3;
-    else                    soundIndex = 4;
+    if (velocity < 2)       soundIndex = 0; // Toque leve
+    else if (velocity < 4)  soundIndex = 1;
+    else if (velocity < 6)  soundIndex = 2;
+    else if (velocity < 8) soundIndex = 3;
+    else                    soundIndex = 4; // Pancada forte
 
-    if (sounds.collides && sounds.collides[soundIndex]) {
-        const audio = sounds.collides[soundIndex].cloneNode();
-        
-        // --- AQUI ESTÁ O AUMENTO DE VOLUME ---
-        
-        // 1. Cálculo Base: Aumentei o divisor (antes /10, agora /6)
-        // Isso faz o volume chegar no máximo muito mais rápido.
-        let vol = velocity / 3; 
+    // 4. TOCA O SOM (Usando o novo sistema blindado)
+    // Passamos o tipo 'collides' e o índice calculado.
+    // A função playSound agora cuida do volume e do desbloqueio do iOS.
+    playSound('collides', soundIndex);
+}
+function setupModPicker() {
+    const grid = document.getElementById("modGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
 
-        // 2. Volume Mínimo (Piso): Aumentei de 0.3 para 0.5
-        // Assim, mesmo toques leves já soam audíveis.
-        vol = Math.max(vol, 0.8); 
-
-        // 3. Limite de Segurança (Teto): O volume nunca pode passar de 1.0
-        audio.volume = Math.min(vol, 1.0);
-        
-        audio.playbackRate = 0.9 + Math.random() * 0.2; 
-        audio.play().catch(() => {});
+    for (let i = -10; i <= 10; i++) {
+        const btn = document.createElement("button");
+        btn.className = "mod-btn";
+        btn.innerText = (i > 0 ? "+" : "") + i;
+        btn.onclick = () => selectMod(i);
+        grid.appendChild(btn);
     }
+}
+
+function toggleModPicker() {
+    const modal = document.getElementById("modPickerModal");
+    const isOpening = modal.style.display === "none";
+    modal.style.display = isOpening ? "flex" : "none";
+    
+    if (isOpening) {
+        playSound('click');
+        highlightActiveMod();
+    }
+}
+
+function selectMod(val) {
+    const input = document.getElementById("modInput");
+    const display = document.getElementById("modDisplay");
+    
+    input.value = val;
+    display.innerText = (val > 0 ? "+" : "") + val;
+    
+    // Atualiza no objeto do personagem atual
+    if (campaign.characters[activeCharIndex]) {
+        campaign.characters[activeCharIndex].modifier = val;
+    }
+    
+    saveData();
+    toggleModPicker();
+    playSound('touch');
+}
+
+function highlightActiveMod() {
+    const currentVal = parseInt(document.getElementById("modInput").value) || 0;
+    document.querySelectorAll('.mod-btn').forEach(btn => {
+        const btnVal = parseInt(btn.innerText);
+        btn.classList.toggle('active', btnVal === currentVal);
+    });
 }

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rollen</title>
@@ -84,9 +86,10 @@
 
             <div class="action-area">
                 <button id="clearBtn">LIMPAR</button>
-                <div class="modifier-wrapper">
-                    <label>MOD</label>
-                    <input type="number" id="modInput" value="0">
+                <div class="modifier-wrapper" onclick="toggleModPicker()">
+                     <label>MOD</label>
+                     <div id="modDisplay">+0</div>
+                     <input type="hidden" id="modInput" value="0">
                 </div>
                 <div class="roll-btn-wrapper">
                     <button id="rollBtn">
@@ -99,5 +102,13 @@
     </div>
 
     <script src="script.js"></script>
+    <div id="modPickerModal" class="modal" style="display: none; z-index: 4000;">
+    <div class="modal-content" style="max-width: 320px;">
+        <h3 style="font-family: 'Cinzel', serif; margin-bottom: 15px; color: #ffb300;">Modificador</h3>
+        <div id="modGrid" class="mod-grid">
+            </div>
+        <button onclick="toggleModPicker()" class="btn-close" style="margin-top: 15px; width: 100%;">FECHAR</button>
+    </div>
+</div>
 </body>
 </html>
