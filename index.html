@@ -75,32 +75,38 @@
         </main>
 
         <section id="bottomPanel">
-            <div id="historyPanel">
-                <div class="history-handle"></div>
-                <h3>Histórico</h3>
-                <ul id="historyList"></ul>
-            </div>
-            <button id="toggleHistoryBtn">Ver Histórico</button>
-
-            <div id="diceSelector"></div>
-
-            <div class="action-area">
-                <button id="clearBtn">LIMPAR</button>
-                <div class="modifier-wrapper" onclick="toggleModPicker()">
-                     <label>MOD</label>
-                     <div id="modDisplay">+0</div>
-                     <input type="hidden" id="modInput" value="0">
-                </div>
-                <div class="roll-btn-wrapper">
-                    <button id="rollBtn">
-                        <span style="position:relative; z-index:2;">ROLAR</span>
-                        <div id="powerBar"></div>
-                    </button>
-                </div>
-            </div>
-        </section>
+    <div id="historyPanel">
+        <div class="history-handle"></div>
+        <h3>Histórico</h3>
+        <ul id="historyList"></ul>
     </div>
+    
+    <button id="toggleHistoryBtn">Ver Histórico</button>
 
+    <div id="diceSelector"></div>
+
+    <div class="action-area">
+        <div class="utility-row">
+            <button id="clearBtn" title="Limpar">🧹</button>
+            
+            <div class="modifier-wrapper" onclick="toggleModPicker()">
+                 <label>MOD</label>
+                 <div id="modDisplay">+0</div>
+                 <input type="hidden" id="modInput" value="0">
+            </div>
+
+            <button id="cycleVantBtn" class="vant-cycle-btn mode-norm" onclick="cycleRollMode()">NORM</button>
+        </div>
+
+        <div class="roll-btn-wrapper">
+            <button id="rollBtn">
+                <span style="position:relative; z-index:2;">ROLAR</span>
+                <div id="powerBar"></div>
+            </button>
+        </div>
+    </div>
+</section>
+    </div>
     <script src="script.js"></script>
     <div id="modPickerModal" class="modal" style="display: none; z-index: 4000;">
     <div class="modal-content" style="max-width: 320px;">

@@ -164,6 +164,7 @@ let sparkleTexture = null;
 let walls = { left: null, right: null, top: null, bottom: null };
 let isGameRunning = false;
 let clock = new THREE.Clock();
+let rollMode = 'normal'; // Pode ser 'normal', 'advantage' ou 'disadvantage'
 
 // --- 2. INICIALIZAÇÃO ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -276,9 +277,20 @@ function updateDiceButtonUI(type, change, reset) {
 }
 
 function updateResultDisplay(txt, total) {
-    const formEl = document.getElementById("resultFormula"); const totalEl = document.getElementById("resultTotal");
-    if (formEl) formEl.innerText = txt;
-    if (totalEl) { totalEl.innerText = total; const char = campaign.characters[activeCharIndex]; if(char) totalEl.style.color = '#ffffff'; }
+    const formEl = document.getElementById("resultFormula"); 
+    const totalEl = document.getElementById("resultTotal");
+    
+    if (formEl) {
+        // MUDANÇA AQUI: innerHTML permite que o <span> funcione
+        formEl.innerHTML = txt; 
+    }
+    
+    if (totalEl) { 
+        totalEl.innerText = total; 
+        const char = campaign.characters[activeCharIndex]; 
+        // Mantém sua lógica de cor de texto
+        if(char) totalEl.style.color = '#ffffff'; 
+    }
 }
 
 // --- CAMPANHA E PERSONAGENS ---
@@ -291,17 +303,35 @@ function openAddCharModal() {
 }
 
 function addCharacterPreview() {
-    const nameInput = document.getElementById("charNameInput"); const colorInput = document.getElementById("charColorInput");
-    const name = nameInput.value; const color = colorInput.value;
+    const nameInput = document.getElementById("charNameInput"); 
+    const colorInput = document.getElementById("charColorInput");
+    const name = nameInput.value; 
+    const color = colorInput.value;
+    
     if (!name) return;
-    const char = { name, color, avatar: avatars[selectedAvatarKey], turnCount: 1, history: [], modifier: 0 };
-    campaign.characters.push(char); saveData(); updateModalCharList();
+
+    // ADICIONADO: rollMode: 'normal' dentro do objeto do personagem
+    const char = { 
+        name, 
+        color, 
+        avatar: avatars[selectedAvatarKey], 
+        turnCount: 1, 
+        history: [], 
+        modifier: 0,
+        rollMode: 'normal' 
+    };
+
+    campaign.characters.push(char); 
+    saveData(); 
+    updateModalCharList();
+    
     nameInput.value = ""; 
-    // Reset Color
     colorInput.value = "#ef5350"; 
     document.querySelector(".color-picker-wrapper").style.backgroundColor = "#ef5350";
     
-    document.getElementById("startCampaignBtn").disabled = false; selectedAvatarKey = 'master'; renderAvatarSelection();
+    document.getElementById("startCampaignBtn").disabled = false; 
+    selectedAvatarKey = 'master'; 
+    renderAvatarSelection();
     playSound('click');
 }
 
@@ -366,43 +396,47 @@ function renderTabs() {
 }
 
 function switchTab(i) {
-    // Se clicar na mesma aba, não faz nada
     if(i === activeCharIndex && campaign.characters.length > 0) return;
 
     const modInput = document.getElementById("modInput");
     const modDisplay = document.getElementById("modDisplay");
 
-    // 1. SALVA os dados do personagem ATUAL antes de mudar o índice
+    // 1. SALVA os dados do personagem que está SAINDO
     if (activeCharIndex >= 0 && activeCharIndex < campaign.characters.length) {
         const oldChar = campaign.characters[activeCharIndex];
-        if (modInput) {
-            oldChar.modifier = parseInt(modInput.value) || 0;
-        }
+        if (modInput) oldChar.modifier = parseInt(modInput.value) || 0;
         
-        // Lógica de incremento de turno (opcional, mantida do seu código)
+        // SALVA o modo de vantagem atual no personagem antigo
+        oldChar.rollMode = rollMode; 
+
         if(oldChar.history.some(h => h.turn === oldChar.turnCount)) {
             oldChar.turnCount++;
         }
     }
 
-    // 2. TROCA o índice para o novo personagem
+    // 2. TROCA o índice
     activeCharIndex = i; 
     const char = campaign.characters[activeCharIndex];
 
-    // 3. CARREGA os dados do NOVO personagem para a interface
+    // 3. CARREGA os dados do personagem que está ENTRANDO
     if (char) {
+        // Carrega Modificador
         const val = char.modifier || 0;
         if (modInput) modInput.value = val;
         if (modDisplay) modDisplay.innerText = (val > 0 ? "+" : "") + val;
+
+        // Carrega Modo de Rolagem (Vantagem/Desvantagem)
+        // Usamos a função setRollMode para atualizar o visual do botão automaticamente
+        setRollMode(char.rollMode || 'normal');
     }
 
-    // 4. ATUALIZA o restante da UI
+    // 4. ATUALIZA UI
     renderTabs(); 
     clearDice(); 
     updateHistoryUI(); 
     saveData();
 
-    // Atualiza o Avatar Central
+    // Atualiza Avatar e Cores (Seu código original preservado)
     const avatarDisplay = document.getElementById("currentAvatarDisplay");
     if (avatarDisplay) { 
         avatarDisplay.innerHTML = char.avatar; 
@@ -410,8 +444,6 @@ function switchTab(i) {
         const svg = avatarDisplay.querySelector('svg'); 
         if(svg) svg.style.fill = char.color; 
     }
-
-    // Atualiza a cor do resultado
     const resTotal = document.getElementById("resultTotal"); 
     if(resTotal) resTotal.style.color = char.color;
 }
@@ -502,21 +534,29 @@ function addDice(sides) {
     const color = char ? char.color : diceConfigs[sides].color;
     
     try {
-        // 1. Cria a parte Visual (Mesh)
         const { geometry, shape, angularDamping } = createDiceGeometry(sides, 1.0);
-        const material = new THREE.MeshPhysicalMaterial({ color: color, metalness: 0.2, roughness: 0.1, clearcoat: 1.0, clearcoatRoughness: 0.1, flatShading: true });
+        
+        // ADICIONADO: transparent e opacity para permitir o efeito fantasma
+        const material = new THREE.MeshPhysicalMaterial({ 
+            color: color, 
+            metalness: 0.2, 
+            roughness: 0.1, 
+            clearcoat: 1.0, 
+            clearcoatRoughness: 0.1, 
+            flatShading: true,
+            transparent: true,
+            opacity: 1.0 
+        }); 
+        
         const mesh = new THREE.Mesh(geometry, material); 
         mesh.castShadow = true; 
         mesh.receiveShadow = false; 
         scene.add(mesh);
         
-        // 2. Cria a parte Física (Body)
         const body = new CANNON.Body({ mass: 5, shape: shape, linearDamping: 0.5, angularDamping: angularDamping, material: world.defaultContactMaterial.materials[1] });
         body.position.set((Math.random()-0.5)*2, 8, (Math.random()-0.5)*2); 
         body.quaternion.set(Math.random(), Math.random(), Math.random(), Math.random());
         
-        // --- AQUI ESTÁ A CONEXÃO MÁGICA ---
-        // Dizemos ao dado: "Toda vez que você bater em algo, chame a função de som"
         body.addEventListener("collide", handleDiceCollision);
         
         world.addBody(body); 
@@ -524,8 +564,6 @@ function addDice(sides) {
         
         updateDiceButtonUI(sides, 1); 
         clearMagicEffects();
-        
-        // playSound('click'); // Sugestão: Deixe comentado/removido para evitar som duplo (o clique do botão já faz o som)
         
     } catch (e) { console.error("Erro no dado D" + sides, e); }
 }
@@ -695,13 +733,84 @@ function rollAllDice(forceMultiplier) {
 function checkDiceStopped() { if (!isRolling) return; let allStopped = true; diceObjects.forEach(d => { if (d.body.velocity.norm() > 0.1 || d.body.angularVelocity.norm() > 0.1) allStopped = false; }); if (allStopped) setTimeout(calculateResults, 200); else requestAnimationFrame(checkDiceStopped); }
 
 function calculateResults() {
-    let total = 0; let parts = []; let isCritSuccess = false; let isCritFail = false;
-    const modInput = document.getElementById("modInput"); let modifier = 0; if (modInput) modifier = parseInt(modInput.value) || 0;
-    diceObjects.forEach(d => { const val = Math.floor(Math.random() * d.type) + 1; total += val; parts.push(`${val} (D${d.type})`); if (d.type === 20) { if (val === 20) isCritSuccess = true; if (val === 1) isCritFail = true; } showFloatingResult(d, val); });
-    total += modifier; let formulaText = parts.join(" + "); if (modifier !== 0) { const sign = modifier > 0 ? "+" : ""; formulaText += ` ${sign}${modifier} (Mod)`; }
-    isRolling = false; updateResultDisplay(formulaText, total);
-    if (isCritSuccess) triggerCritEffect('success'); if (isCritFail) triggerCritEffect('fail');
-    const char = campaign.characters[activeCharIndex]; if (char) { char.modifier = modifier; saveHistory(char, total, formulaText); } saveData();
+    let total = 0; 
+    let parts = []; 
+    let d20Results = []; 
+    let isCritSuccess = false; 
+    let isCritFail = false;
+    
+    const modInput = document.getElementById("modInput"); 
+    let modifier = parseInt(modInput.value) || 0;
+
+    // 1. Identifica os resultados
+    const rolls = diceObjects.map(d => {
+        const val = Math.floor(Math.random() * d.type) + 1;
+        const data = { val, type: d.type, obj: d, ignored: false };
+        if (d.type === 20) d20Results.push(data);
+        return data;
+    });
+
+    // 2. Lógica de Vantagem/Desvantagem
+    if (rollMode !== 'normal' && d20Results.length >= 2) {
+        if (rollMode === 'advantage') {
+            d20Results.sort((a, b) => b.val - a.val); // Maior primeiro
+        } else {
+            d20Results.sort((a, b) => a.val - b.val); // Menor primeiro
+        }
+        
+        // Ignora os perdedores da disputa
+        for (let i = 1; i < d20Results.length; i++) {
+            d20Results[i].ignored = true;
+        }
+    }
+
+    // 3. Aplica os efeitos visuais e soma o total
+    rolls.forEach(res => {
+        if (!res.ignored) {
+            // DADO QUE VALE: Mantém a cor original (sem emissive)
+            total += res.val;
+            
+            if (res.type === 20) {
+                if (res.val === 20) isCritSuccess = true;
+                if (res.val === 1) isCritFail = true;
+            }
+            parts.push(`${res.val} (D${res.type})`);
+            
+            // Garante que o material resete para 100% de opacidade se for um re-roll
+            res.obj.mesh.material.opacity = 1.0;
+            res.obj.mesh.material.emissiveIntensity = 0; // Remove brilho residual
+        } else {
+            // DADO IGNORADO: Efeito Fantasma
+            res.obj.mesh.material.opacity = 0.2;
+            res.obj.mesh.material.color.setHex(0x333333);
+            
+            parts.push(`<span style="text-decoration: line-through; opacity: 0.5;">${res.val}</span>`);
+        }
+        
+        showFloatingResult(res.obj, res.val);
+    });
+
+    // 4. Finalização da UI
+    total += modifier; 
+    let formulaText = parts.join(" + "); 
+    if (modifier !== 0) { 
+        const sign = modifier > 0 ? "+" : ""; 
+        formulaText += ` ${sign}${modifier} (Mod)`; 
+    }
+
+    isRolling = false; 
+    updateResultDisplay(formulaText, total);
+
+    if (isCritSuccess) triggerCritEffect('success'); 
+    else if (isCritFail) triggerCritEffect('fail');
+
+    const char = campaign.characters[activeCharIndex]; 
+    if (char) { 
+        char.modifier = modifier; 
+        saveHistory(char, total, formulaText.replace(/<[^>]*>?/gm, '')); 
+    } 
+    
+    saveData();
 }
 function triggerCritEffect(type) { const body = document.body; if (type === 'success') { body.classList.add('crit-success-flash'); setTimeout(() => body.classList.remove('crit-success-flash'), 1000); } else { body.classList.add('crit-fail-flash', 'shake-effect'); setTimeout(() => body.classList.remove('crit-fail-flash', 'shake-effect'), 500); } }
 function clearDice() { 
@@ -936,4 +1045,64 @@ function highlightActiveMod() {
         const btnVal = parseInt(btn.innerText);
         btn.classList.toggle('active', btnVal === currentVal);
     });
+}
+function setRollMode(mode) {
+    rollMode = mode; // Atualiza a variável global de controle
+    
+    // Salva no personagem atual para persistência
+    if (campaign.characters[activeCharIndex]) {
+        campaign.characters[activeCharIndex].rollMode = mode;
+    }
+
+    const btn = document.getElementById('cycleVantBtn');
+    if (!btn) return;
+
+    btn.classList.remove('mode-norm', 'mode-adv', 'mode-dis');
+
+    if (mode === 'normal') {
+        btn.innerText = 'NORMAL';
+        btn.classList.add('mode-norm');
+    } else if (mode === 'advantage') {
+        btn.innerText = 'VANTAGEM';
+        btn.classList.add('mode-adv');
+    } else if (mode === 'disadvantage') {
+        btn.innerText = 'DESVANTAGEM';
+        btn.classList.add('mode-dis');
+    }
+    
+    // Removi o playSound daqui para evitar que toque ao trocar de aba (switchTab)
+    // O som deve ser tocado apenas no clique manual (cycleRollMode)
+}
+
+// Atualize também o cycleRollMode para incluir o som de volta
+function cycleRollMode() {
+    playSound('click'); // Som apenas no toque manual
+    if (rollMode === 'normal') {
+        setRollMode('advantage');
+    } else if (rollMode === 'advantage') {
+        setRollMode('disadvantage');
+    } else {
+        setRollMode('normal');
+    }
+}
+
+function setRollMode(mode) {
+    rollMode = mode;
+    const btn = document.getElementById('cycleVantBtn');
+    if (!btn) return;
+
+    btn.classList.remove('mode-norm', 'mode-adv', 'mode-dis');
+
+    if (mode === 'normal') {
+        btn.innerText = 'NORMAL';
+        btn.classList.add('mode-norm');
+    } else if (mode === 'advantage') {
+        btn.innerText = 'VANTAGEM';
+        btn.classList.add('mode-adv');
+    } else if (mode === 'disadvantage') {
+        btn.innerText = 'DESVANTAGEM';
+        btn.classList.add('mode-dis');
+    }
+
+    playSound('click');
 }
