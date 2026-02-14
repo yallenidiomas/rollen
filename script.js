@@ -123,6 +123,8 @@ const avatars = {
     familiar: '<img src="familiar.png" class="avatar-img" alt="Familiar">',
     humanf: '<img src="humanf.png" class="avatar-img" alt="Humana">',
     humanm: '<img src="humanm.png" class="avatar-img" alt="Humano">',
+    bhumanm: '<img src="bhumanm.png" class="avatar-img" alt="Humano">',
+    bhumanf: '<img src="bhumanf.png" class="avatar-img" alt="Humana">',
     dragonbornf: '<img src="dragonbornf.png" class="avatar-img" alt="Dracona">',
     dragonbornm: '<img src="dragonbornm.png" class="avatar-img" alt="Dracono">',
     elfdrowf: '<img src="elfdrowf.png" class="avatar-img" alt="Drow F">',
