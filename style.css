@@ -73,6 +73,211 @@ body {
     box-shadow: inset 0 0 15px rgba(0,0,0,0.5); flex-shrink: 0;
 }
 .add-char-tab:active { background: #1b5e20; transform: translateY(2px); }
+/* --- BOTÃO DO DIÁRIO (LIVRO) --- */
+#logBtn {
+    width: 60px; height: 100%;
+    /* Madeira igual ao Settings */
+    background: var(--bg-wood-light); 
+    border: none; 
+    border-left: 2px solid #0f0803; 
+    border-right: 2px solid #0f0803;
+    display: flex; justify-content: center; align-items: center; 
+    cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5); 
+    flex-shrink: 0;
+}
+#logBtn:active svg { transform: scale(0.9); }
+/* --- ESTILOS DO COMPÊNDIO --- */
+
+/* Botão do Topo */
+#compendiumBtn {
+    width: 60px; height: 100%;
+    background: var(--bg-wood-light); border: none; border-left: 2px solid #0f0803; border-right: 2px solid #0f0803;
+    display: flex; justify-content: center; align-items: center; cursor: pointer;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5); flex-shrink: 0;
+}
+
+/* Barra de Busca */
+.search-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 10px;
+}
+#ruleSearch {
+    width: 100%;
+    background: #1a120b;
+    border: 1px solid #8d6e63;
+    color: #ffd54f;
+    padding: 12px 40px 12px 15px;
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
+#ruleSearch::placeholder { color: #5d4037; font-style: italic; }
+.search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+}
+
+/* Filtros de Categoria */
+.category-filters {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    scrollbar-width: none; /* Firefox */
+}
+.category-filters::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+.cat-btn {
+    background: #3e2723;
+    color: #a1887f;
+    border: 1px solid #5d4037;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    cursor: pointer;
+    font-family: var(--font-title);
+    transition: all 0.2s;
+}
+.cat-btn.active {
+    background: var(--gold);
+    color: #1a120b;
+    border-color: #ffca28;
+    box-shadow: 0 0 10px rgba(255, 179, 0, 0.4);
+    font-weight: bold;
+}
+
+/* Área de Conteúdo */
+.rules-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    background: #eecfa1; /* Pergaminho */
+    padding: 15px;
+    /* Textura de papel */
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+/* Cartão de Regra Individual */
+.rule-card {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid #bcaaa4;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.rule-title {
+    font-family: var(--font-title);
+    color: #3e2723;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-bottom: 2px solid #8d6e63;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+.rule-tag {
+    font-size: 0.6rem;
+    background: #5d4037;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    align-self: center;
+}
+.rule-desc {
+    font-family: var(--font-body);
+    color: #1a0f00;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.rule-desc strong { color: #bf360c; } /* Destaque em vermelho escuro */
+
+/* --- PAINEL DE ESTATÍSTICAS (O Escolhido / O Amaldiçoado) --- */
+.stats-banner {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.stat-box {
+    flex: 1;
+    background: rgba(0,0,0,0.05);
+    border: 1px solid #8d6e63;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.stat-box.lucky { background: linear-gradient(to bottom, #fff8e1, #ffecb3); border-color: #ffb300; }
+.stat-box.unlucky { background: linear-gradient(to bottom, #eceff1, #cfd8dc); border-color: #546e7a; }
+
+.stat-icon { font-size: 1.5rem; margin-bottom: 2px; }
+.stat-title { font-family: var(--font-title); font-size: 0.65rem; font-weight: bold; text-transform: uppercase; color: #5d4037; }
+.stat-name { font-weight: bold; font-size: 0.9rem; color: #3e2723; margin: 2px 0; }
+.stat-val { font-size: 0.7rem; color: #795548; }
+
+/* --- LISTA DO LOG (Pergaminho) --- */
+.global-log-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 45vh; /* Altura máxima com rolagem */
+    overflow-y: auto;
+    border: 1px solid #8d6e63;
+    border-radius: 4px;
+    background: #fff8e1; /* Cor de papel envelhecido claro */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+.global-log-entry {
+    padding: 10px 12px;
+    border-bottom: 1px solid #d7ccc8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-body);
+}
+.global-log-entry:last-child { border-bottom: none; }
+
+/* Coluna Esquerda: Nome e Hora */
+.log-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.log-char-name {
+    font-weight: bold;
+    font-family: var(--font-title);
+    font-size: 0.9rem;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+.log-time { font-size: 0.65rem; color: #8d6e63; margin-top: 2px; }
+
+/* Coluna Direita: Resultado e Fórmula */
+.log-result-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.log-total { 
+    font-weight: 900; 
+    font-size: 1.2rem; 
+    color: #3e2723; 
+    font-family: var(--font-title);
+}
+.log-formula { font-size: 0.75rem; color: #5d4037; font-style: italic; }
+
+/* Destaque visual para Nat 20 e Nat 1 no log */
+.log-crit-success { color: #d32f2f; text-shadow: 0 0 2px #ffcdd2; } /* Vermelho épico */
+.log-crit-fail { color: #546e7a; } /* Cinza triste */
 
 /* Abas */
 .char-tab {
@@ -340,16 +545,45 @@ body {
 
 /* MODAL & AUXILIARES */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(62,39,35,0.95), rgba(26,18,11,0.98)); display: flex; justify-content: center; align-items: center; z-index: 3000; backdrop-filter: blur(5px); }
-#appCredits { position: static; bottom: 40px; left: 0; width: 100%; text-align: center; font-family: var(--font-title); font-size: '1'.75rem; color: #5d4037; opacity: 2.0; z-index: 2005; pointer-events: none; text-shadow: 0 0 5px rgb(255, 51, 0); }
+#appCredits { position: static; bottom: 40px; left: 0; width: 100%; text-align: center; font-family: var(--font-title); font-size: '1'.75rem; color: #ffffff; opacity: 2.0; z-index: 2005; pointer-events: none; text-shadow: 0 0 5px rgb(3, 2, 0); }
 .modal-content { background: var(--parchment); color: var(--text-ink); padding: 25px; border-radius: 6px; width: 90%; max-width: 450px; text-align: center; border: 8px solid var(--bg-wood-dark); box-shadow: 0 0 0 10px #5d4037, 0 20px 50px rgba(0,0,0,0.8); position: relative; max-height: 85vh; overflow-y: auto; margin-bottom: 20px; }
 .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid #a1887f; margin-bottom: 15px; justify-items: center; }
 .avatar-option { width: 55px; height: 55px; border-radius: 50%; border: 3px solid #8d6e63; cursor: pointer; overflow: hidden; background: #000; box-shadow: 0 3px 6px rgba(0,0,0,0.3); }
 .avatar-option.selected { border-color: #d50000; transform: scale(1.15); z-index: 2; box-shadow: 0 0 10px #d50000; }
 input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(--text-ink); padding: 15px; font-family: var(--font-title); font-weight: bold; width: 100%; border-radius: 4px; font-size: 1.1rem; }
 .char-form { display: flex; gap: 10px; align-items: stretch; margin-top: 15px; }
-.color-picker-wrapper { flex: 0 0 60px; position: relative; border-radius: 4px; border: 2px solid #8d6e63; overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.3); }
-#charColorInput { position: absolute; width: 200%; height: 200%; opacity: 0; cursor: pointer; top:-50%; left:-50%; }
-#colorLabel { font-family: var(--font-title); font-weight: bold; font-size: 0.7rem; pointer-events: none; text-shadow: 0 1px 2px black; color: white; }
+.color-picker-wrapper { 
+    flex: 0 0 60px; 
+    position: relative; 
+    border-radius: 4px; 
+    border: 2px solid #8d6e63; 
+    overflow: hidden; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3); 
+    background-color: #ef5350; /* Cor inicial de fallback */
+}
+#charColorInput { 
+    position: absolute; 
+    width: 200%; 
+    height: 200%; 
+    opacity: 0; 
+    cursor: pointer; 
+    top: -50%; 
+    left: -50%; 
+    z-index: 10; /* <--- ISSO É O MAIS IMPORTANTE: Traz o clique para frente */
+}
+#colorLabel { 
+    font-family: var(--font-title); 
+    font-weight: bold; 
+    font-size: 0.7rem; 
+    pointer-events: none; /* Garante que o clique atravesse o texto */
+    text-shadow: 0 1px 2px black; 
+    color: white; 
+    z-index: 5; 
+}
 #startCampaignBtn, #addCharBtn { font-family: var(--font-title); font-weight: bold; letter-spacing: 1px; text-transform: uppercase; border-radius: 4px; cursor: pointer; border: none; width: 100%; padding: 15px; margin-top: 15px; }
 #addCharBtn { background: #5d4037; color: var(--parchment); border: 2px solid #3e2723; box-shadow: 0 4px 0 #281b15; }
 #addCharBtn:active { transform: translateY(4px); box-shadow: none; }
@@ -640,3 +874,52 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
 .adv-btn.active#btn-adv { background: linear-gradient(to bottom, #66bb6a, #2e7d32); color: #fff; box-shadow: 0 3px 0 #1b5e20; border-color: #c8e6c9; }
 
 .adv-btn:active { transform: translateY(2px); box-shadow: none; }
+/* --- DIVISÓRIAS DE NÍVEL DE MAGIA --- */
+.level-header {
+    width: 100%;
+    padding: 8px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-family: var(--font-title);
+    font-weight: 900;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    text-align: center;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    
+    /* EFEITO PERSISTENTE */
+    position: sticky;
+    top: -16px; /* Gruda no topo do visor interno */
+    z-index: 100;
+}
+
+/* Cores por Nível */
+.lvl-0 { background: linear-gradient(90deg, #424242, #757575, #424242); border-color: #9e9e9e; } /* Truque: Cinza */
+.lvl-1 { background: linear-gradient(90deg, #1b5e20, #4caf50, #1b5e20); border-color: #81c784; } /* Nível 1: Verde */
+.lvl-2 { background: linear-gradient(90deg, #0d47a1, #2196f3, #0d47a1); border-color: #64b5f6; } /* Nível 2: Azul */
+.lvl-3 { background: linear-gradient(90deg, #b71c1c, #f44336, #b71c1c); border-color: #e57373; } /* Nível 3: Vermelho */
+.lvl-4 { background: linear-gradient(90deg, #4a148c, #9c27b0, #4a148c); border-color: #ba68c8; } /* Nível 4: Roxo */
+.lvl-5 { background: linear-gradient(90deg, #e65100, #ff9800, #e65100); border-color: #ffb74d; } /* Nível 5: Laranja */
+.lvl-6 { background: linear-gradient(90deg, #f57f17, #ffca28, #f57f17); border-color: #ffd54f; color: #3e2723; text-shadow: none; } /* Nível 6: Dourado */
+.lvl-7 { background: linear-gradient(90deg, #006064, #00bcd4, #006064); border-color: #4dd0e1; } /* Nível 7: Ciano */
+.lvl-8 { background: linear-gradient(90deg, #880e4f, #e91e63, #880e4f); border-color: #f06292; } /* Nível 8: Magenta Escuro */
+.lvl-9 { background: linear-gradient(90deg, #000000, #311b92, #000000); border-color: #b388ff; border: 1px solid #fff; } /* Nível 9: Cósmico */
+
+/* Divisória Genérica (Regras) */
+.lvl-general { background: linear-gradient(90deg, #3e2723, #5d4037, #3e2723); color: #eecfa1; }
+/* --- DIVISÓRIAS ESPECÍFICAS PARA CLASSES --- */
+.header-barbaro { background: linear-gradient(90deg, #7f0000, #d32f2f, #7f0000); }
+.header-bardo { background: linear-gradient(90deg, #4a148c, #9c27b0, #4a148c); }
+.header-clerigo { background: linear-gradient(90deg, #263238, #78909c, #263238); }
+.header-druida { background: linear-gradient(90deg, #1b5e20, #4caf50, #1b5e20); }
+.header-guerreiro { background: linear-gradient(90deg, #3e2723, #795548, #3e2723); }
+.header-monge { background: linear-gradient(90deg, #004d40, #26a69a, #004d40); }
+.header-paladino { background: linear-gradient(90deg, #f57f17, #fbc02d, #f57f17); color: #000 !important; text-shadow: none !important; }
+.header-patrulheiro { background: linear-gradient(90deg, #33691e, #689f38, #33691e); }
+.header-ladino { background: linear-gradient(90deg, #000000, #424242, #000000); }
+.header-feiticeiro { background: linear-gradient(90deg, #b71c1c, #e53935, #b71c1c); }
+.header-bruxo { background: linear-gradient(90deg, #311b92, #5e35b1, #311b92); }
+.header-mago { background: linear-gradient(90deg, #0d47a1, #1e88e5, #0d47a1); }
