@@ -97,7 +97,11 @@ const avatars = {
     halfelff: '<img src="halfelff.png" class="avatar-img" alt="Meia Elfa">',
     halfelfm: '<img src="halfelfm.png" class="avatar-img" alt="Meio Elfo">',
     halforcf: '<img src="halforcf.png" class="avatar-img" alt="Orc F">',
-    halforcm: '<img src="halforcm.png" class="avatar-img" alt="Orc M">'
+    halforcm: '<img src="halforcm.png" class="avatar-img" alt="Orc M">',
+    aesimarm: '<img src="aesimarm.png" class="avatar-img" alt="Aesimar M">',
+    aesimarf: '<img src="aesimarf.png" class="avatar-img" alt="Aesimar M">',
+    goliathm: '<img src="goliathm.png" class="avatar-img" alt="Goliath M">',
+    goliathf: '<img src="goliathf.png" class="avatar-img" alt="Goliath F">'
 };
 
 const diceConfigs = { 4: {color: 0xef5350}, 6: {color: 0xffca28}, 8: {color: 0x66bb6a}, 10: {color: 0x42a5f5}, 12: {color: 0xab47bc}, 20: {color: 0xffffff} };
@@ -964,7 +968,13 @@ function renderRules(data) {
     });
 }
 function translateCategory(cat) {
-    if (cat === 'condition') return 'Condição'; if (cat === 'action') return 'Ação'; if (cat === 'combat') return 'Regra'; if (cat === 'spell') return 'Magia'; return cat;
+    if (cat === 'condition') return 'Condição'; 
+    if (cat === 'action') return 'Ação'; 
+    if (cat === 'combat') return 'Regra'; 
+    if (cat === 'spell') return 'Magia'; 
+    if (cat === 'env') return 'Ambiente'; 
+    if (cat === 'species') return 'Raça'; // <--- Adicione esta linha
+    return cat;
 }
 
 function filterRules() {
