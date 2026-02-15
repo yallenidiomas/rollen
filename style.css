@@ -1203,3 +1203,15 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
 .header-feiticeiro { background: linear-gradient(90deg, #b71c1c, #e53935, #b71c1c); }
 .header-bruxo { background: linear-gradient(90deg, #311b92, #5e35b1, #311b92); }
 .header-mago { background: linear-gradient(90deg, #0d47a1, #1e88e5, #0d47a1); }
+/* --- DIVISÓRIA DE RAÇAS (ESPÉCIES) --- */
+.header-especies { 
+    background: linear-gradient(90deg, #5d4037, #8d6e63, #5d4037) !important; 
+    border-color: #3e2723 !important;
+}
+
+/* Tag lateral do card */
+.tag-especies { 
+    background: #795548 !important; 
+}
+
+/* Ajuste na função de tradução para exibir o nome correto na etiqueta */

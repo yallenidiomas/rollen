@@ -892,21 +892,19 @@ function renderRules(data) {
         return;
     }
 
-    // 1. ORDENAÇÃO MELHORADA
+    // 1. ORDENAÇÃO MELHORADA (Corrigido: Adicionado 'species')
     const sortedData = [...data].sort((a, b) => {
-        const catOrder = { 'condition': 1, 'action': 1, 'combat': 1, 'env': 1, 'class': 2, 'spell': 3 };
+        const catOrder = { 'condition': 1, 'action': 1, 'combat': 1, 'env': 1, 'class': 2, 'species': 2, 'spell': 3 };
         
-        // Primeiro por categoria principal
         if (catOrder[a.category] !== catOrder[b.category]) 
             return catOrder[a.category] - catOrder[b.category];
         
-        // Se forem Classes, agrupa por Parent e depois por Prioridade (Nível)
-        if (a.category === 'class') {
+        // Se forem Classes ou Raças, agrupa pelo nome do grupo (Espécies, Bardo, etc)
+        if (a.category === 'class' || a.category === 'species') {
             if (a.parentClass !== b.parentClass) return a.parentClass.localeCompare(b.parentClass);
             return getSortPriority(a) - getSortPriority(b);
         }
         
-        // Se forem Magias, ordena por nível e nome
         const levelA = typeof getLevelValue === 'function' ? getLevelValue(a) : 0;
         const levelB = typeof getLevelValue === 'function' ? getLevelValue(b) : 0;
         if (levelA !== levelB) return levelA - levelB;
@@ -920,12 +918,13 @@ function renderRules(data) {
         let sectionLabel = "";
         let headerClass = "";
 
+        // 2. DEFINIÇÃO DE TÍTULOS (Corrigido: Removido o IF duplicado)
         if (rule.category === 'spell') {
             const level = getLevelValue(rule);
             sectionLabel = level === 0 ? "Truques (Nível 0)" : `Círculo ${level}º`;
             headerClass = `lvl-${level}`;
-        } else if (rule.category === 'class') {
-            sectionLabel = rule.parentClass;
+        } else if (rule.category === 'class' || rule.category === 'species') {
+            sectionLabel = rule.parentClass; 
             const safeName = sectionLabel.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
             headerClass = `header-${safeName}`;
         } else {
@@ -944,11 +943,11 @@ function renderRules(data) {
         const div = document.createElement("div");
         div.className = "rule-card";
         
-        // Define a etiqueta lateral (Se for classe, usa o nome da classe)
+        // 3. ETIQUETA LATERAL (Corrigido: Adicionado species)
         let tagName = translateCategory(rule.category);
         let tagExtraClass = "";
         
-        if (rule.category === 'class') {
+        if (rule.category === 'class' || rule.category === 'species') {
             tagName = rule.parentClass;
             const safeTag = tagName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
             tagExtraClass = `tag-${safeTag}`;

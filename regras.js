@@ -3606,4 +3606,87 @@ const rulesData = [
         meta: "Subclasse Nível 14",
         text: "Ao conjurar uma magia de Mago (nível 1 a 5) que cause dano, você pode causar o <strong>dano máximo</strong> possível.<ul><li><strong>1º uso:</strong> Sem penalidade.</li><li><strong>Reuso:</strong> Sofre <strong>2d12 de dano Necrótico</strong> por nível da magia imediatamente após o uso. Esse dano aumenta em 1d12 a cada reuso subsequente antes de um Descanso Longo e ignora resistências.</li></ul>"
     },
+// =================================================================
+    // --- CATEGORIA: ESPÉCIES (RAÇAS - REGRAS COMPLETAS) ---
+    // =================================================================
+    {
+        id: "spc-aas-1",
+        title: "Aasimar",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio ou Pequeno | 9m",
+        text: "<ul><li><strong>Resistência Celestial:</strong> Resistência a dano Necrótico e Radiante.</li><li><strong>Mãos que Curam:</strong> 1x/dia, com uma Ação de Magia, cura alvos em uma quantidade de <b>d4s igual à sua Proficiência</b>.</li><li><strong>Portador da Luz:</strong> Conhece o truque <i>Luz</i> (Atributo: CAR).</li><li><strong>Revelação Celestial (Nív 3):</strong> 1x/dia, libera energia por 1 min (sem ação). Causa dano extra igual à <b>Proficiência</b> 1x/turno. Escolha a forma:<br>• <b>Brilho Interno:</b> Luz em 6m. Criaturas a até 3m sofrem dano Radiante igual à sua Prof no fim do seu turno.<br>• <b>Asas Celestiais:</b> Ganha deslocamento de voo igual ao terrestre.<br>• <b>Véu Necrótico:</b> Inimigos a 3m ficam <b>Amedrontados</b> (Save CAR nega).</li><li><strong>Visão no Escuro:</strong> 18 metros.</li></ul>"
+    },
+    {
+        id: "spc-ana-1",
+        title: "Anão",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio | 9m",
+        text: "<ul><li><strong>Firmeza Enânica:</strong> Seu PV máximo aumenta em 1 para cada nível que você possui.</li><li><strong>Ligação com Pedra:</strong> Prof vezes por dia, com <b>Ação Bônus</b>, ganha <b>Sentido Sísmico</b> de 18m por 10 minutos.</li><li><strong>Resiliência Enânica:</strong> Resistência a dano Venenoso e <b>Vantagem</b> em testes contra Veneno.</li><li><strong>Visão no Escuro:</strong> 18 metros.</li></ul>"
+    },
+    {
+        id: "spc-dra-1",
+        title: "Draconato",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio | 9m",
+        text: "<ul><li><strong>Ancestralidade Dracônica:</strong> Escolha entre Ácido, Eletricidade, Fogo, Frio ou Veneno. Define sua Resistência e Sopro.</li><li><strong>Sopro:</strong> Prof vezes por dia. Ao usar a ação <b>Ataque</b>, substitui um ataque por um sopro (cone 4,5m ou linha 9m). Dano: <b>1d10</b> (aumenta para 2d10 no nív 5, 3d10 no 11 e 4d10 no 17). Save DES reduz metade.</li><li><strong>Voo Dracônico (Nív 5):</strong> 1x/dia, com <b>Ação Bônus</b>, ganha voo igual ao terrestre por 10 min.</li><li><strong>Visão no Escuro:</strong> 18 metros.</li></ul>"
+    },
+    {
+        id: "spc-elf-1",
+        title: "Elfo",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio | 9m",
+        text: "<ul><li><strong>Linhagem Élfica:</strong> Magias baseadas em INT, SAB ou CAR. Pode conjurar cada 1x/dia sem gasto (ou usar seus espaços):<br>• <b>Alto Elfo:</b> Truque <i>Prestidigitação</i> (pode trocar em descanso curto). Nív 3: <i>Detectar Magia</i>. Nív 5: <i>Passo da Neblina</i>.<br>• <b>Drow:</b> Visão no Escuro 36m. Truque <i>Luz Dançante</i>. Nív 3: <i>Fogo Feérico</i>. Nív 5: <i>Escuridão</i>.<br>• <b>Elfo Silvestre:</b> Deslocamento 10,5m. Truque <i>Druidismo</i>. Nív 3: <i>Passolongo</i>. Nív 5: <i>Passo sem Pegadas</i>.</li><li><strong>Ancestralidade Feérica:</strong> Vantagem contra ser <b>Enfeitiçado</b> e imune a sono mágico.</li><li><strong>Sentidos Afiados:</strong> Proficiência em Intuição, Percepção ou Sobrevivência.</li><li><strong>Transe:</strong> Descanso Longo em 4 horas.</li><li><strong>Visão no Escuro:</strong> 18 metros (36m para Drow).</li></ul>"
+    },
+    {
+        id: "spc-gno-1",
+        title: "Gnomo",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Pequeno | 9m",
+        text: "<ul><li><strong>Esperteza Gnômica:</strong> <b>Vantagem</b> em testes de resistência de INT, SAB e CAR.</li><li><strong>Linhagem Gnômica (Atributo INT, SAB ou CAR):</strong><br>• <b>Floresta:</b> Truque <i>Ilusão Menor</i>. Magia <i>Falar com Animais</i> sempre preparada (conjura Prof vezes/dia grátis).<br>• <b>Rocha:</b> Truques <i>Consertar</i> e <i>Prestidigitação</i>. Pode criar até 3 mecanismos miúdos que imitam efeitos de Prestidigitação (duram 8h).</li><li><strong>Visão no Escuro:</strong> 18 metros.</li></ul>"
+    },
+    {
+        id: "spc-gol-1",
+        title: "Goliath",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio | 10,5m",
+        text: "<ul><li><strong>Físico Poderoso:</strong> Capacidade de carga de criatura Grande e Vantagem para se livrar de <b>Agarrar</b>.</li><li><strong>Forma Grande (Nív 5):</strong> 1x/dia, <b>Ação Bônus</b> para ficar Grande por 10 min. Ganha <b>Vantagem em FOR</b> e +3m de movimento.</li><li><strong>Linhagem Gigante (Uso: Prof vezes/dia):</strong><br>• <b>Gelo:</b> Ataque causa +1d6 frio e reduz mov do alvo em 3m.<br>• <b>Colina:</b> Ataque derruba criatura (Caído).<br>• <b>Fogo:</b> Ataque causa +1d10 fogo.<br>• <b>Nuvens:</b> <b>Ação Bônus</b> teletransporta 9m.<br>• <b>Pedra:</b> <b>Reação</b> reduz dano sofrido em 1d12+CON.<br>• <b>Tempestade:</b> <b>Reação</b> causa 1d8 trovejante em quem te deu dano (18m).</li><li><strong>Visão no Escuro:</strong> 18 metros.</li></ul>"
+    },
+    {
+        id: "spc-hal-1",
+        title: "Halfling",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Pequeno | 9m",
+        text: "<ul><li><strong>Sortudo:</strong> Pode re-rolar qualquer '1' natural no d20 (Ataques, Testes ou Saves).</li><li><strong>Corajoso:</strong> Vantagem em resistência contra <b>Medo</b>.</li><li><strong>Agilidade Halfling:</strong> Pode se mover pelo espaço de qualquer criatura maior que você.</li><li><strong>Naturalmente Furtivo:</strong> Pode tentar se esconder mesmo se estiver obscurecido apenas por uma criatura maior.</li></ul>"
+    },
+    {
+        id: "spc-hum-1",
+        title: "Humano",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio ou Pequeno | 9m",
+        text: "<ul><li><strong>Engenhoso:</strong> Ganha <b>Inspiração Heroica</b> (Vantagem) sempre que termina um Descanso Longo.</li><li><strong>Hábil:</strong> Proficiência em uma perícia adicional à sua escolha.</li><li><strong>Versátil:</strong> Recebe um <b>Talento de Origem</b> adicional de nível 1.</li></ul>"
+    },
+    {
+        id: "spc-orc-1",
+        title: "Orc",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio | 9m",
+        text: "<ul><li><strong>Surto de Adrenalina:</strong> Prof vezes por Descanso Curto, com <b>Ação Bônus</b>, faz a ação Corrida e recebe <b>Proficiência em PV temporários</b>.</li><li><strong>Tolerância Infindável:</strong> 1x/Descanso Longo, ao cair a 0 PV, fica com 1 PV em vez disso.</li><li><strong>Visão no Escuro:</strong> 36 metros.</li></ul>"
+    },
+    {
+        id: "spc-tie-1",
+        title: "Tiefling",
+        parentClass: "Espécies",
+        category: "species",
+        meta: "Humanoide | Médio | 9m",
+        text: "<ul><li><strong>Legado Infernal (Atributo INT, SAB ou CAR):</strong> Resistência e Magias (1x/dia grátis):<br>• <b>Abissal:</b> Resist. Veneno. Truque <i>Spray Venenoso</i>. Nív 3: <i>Raio de Enjôo</i>. Nív 5: <i>Imobilizar Pessoas</i>.<br>• <b>Chthonico:</b> Resist. Necrótico. Truque <i>Toque Gélido</i>. Nív 3: <i>Vida Falsa</i>. Nív 5: <i>Raio do Enfraquecimento</i>.<br>• <b>Infernal:</b> Resist. Fogo. Truque <i>Raio de Fogo</i>. Nív 3: <i>Repreensão Infernal</i>. Nív 5: <i>Escuridão</i>.</li><li><strong>Presença Sobrenatural:</strong> Conhece o truque <i>Taumaturgia</i>.</li><li><strong>Visão no Escuro:</strong> 18 metros.</li></ul>"
+    }
 ]
