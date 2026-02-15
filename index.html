@@ -33,7 +33,7 @@
                     <span id="colorLabel">Cor</span>
                 </div>
             </div>
-
+            
             <button id="addCharBtn" class="btn-secondary">Adicionar à Mesa</button>
             <ul id="charListPreview"></ul>
         </div>
@@ -63,19 +63,28 @@
             <ul id="globalLogList" class="global-log-list">
                 </ul>
             
-            <button onclick="document.getElementById('globalLogModal').style.display='none'" class="btn-close" style="margin-top: 15px;">FECHAR LIVRO</button>
+            <button onclick="document.getElementById('globalLogModal').style.display='none'" class="btn-close-fantasy" style="position: relative; top: 0; right: 0; margin: 15px auto;">✕</button>
         </div>
     </div>
 
     <div id="settingsMenu" class="modal" style="display: none; z-index: 3000;">
         <div class="modal-content">
-            <h3>Opções de Jogo</h3>
-            <button onclick="resetCampaignHistory()" class="btn-warning">Zerar Histórico</button>
-            <p class="desc">Mantém os personagens, mas limpa as rolagens.</p>
-            <hr>
-            <button onclick="resetJourney()" class="btn-danger">Reiniciar Jornada</button>
-            <p class="desc">Apaga tudo e volta ao início.</p>
-            <button onclick="toggleSettings()" class="btn-close">Voltar</button>
+            <h3>Opções da Jornada</h3>
+            
+            <div class="settings-group">
+                <button onclick="resetCampaignHistory()" class="btn-settings-action btn-warning-fantasy">Zerar Histórico</button>
+                <p class="desc">Mantém os heróis na mesa, mas apaga todas as crônicas e estatísticas de sorte.</p>
+            </div>
+
+            <div class="settings-group">
+                <button onclick="resetJourney()" class="btn-settings-action btn-danger-fantasy">Reiniciar Jornada</button>
+                <p class="desc">CUIDADO: Apaga a campanha e os personagens, retornando ao vazio inicial.</p>
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed #8d6e63; margin: 20px 0;">
+
+            <button onclick="toggleSettings()" class="btn-close-fantasy">✕</button>
+            <div style="font-family: 'Cinzel'; font-size: 0.7rem; color: #5d4037; margin-top: 8px; font-weight: bold;">VOLTAR</div>
         </div>
     </div>
 
@@ -94,9 +103,9 @@
                     <path d="M12 3v18c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm-1-11h2v3h3v2h-3v3h-2v-3H8v-2h3V8z"/> <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z"/>
                 </svg>
             </button>
-
-            <button id="settingsBtn" onclick="toggleSettings()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffb300"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+            
+            <button id="settingsBtn" onclick="toggleSettings()" class="btn-settings-fantasy">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#3e2723"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
             </button>
         </header>
 
@@ -153,11 +162,15 @@
         <div class="modal-content" style="max-width: 320px;">
             <h3 style="font-family: 'Cinzel', serif; margin-bottom: 15px; color: #ffb300;">Modificador</h3>
             <div id="modGrid" class="mod-grid"></div>
-            <button onclick="toggleModPicker()" class="btn-close" style="margin-top: 15px; width: 100%;">FECHAR</button>
+            <button onclick="toggleModPicker()" class="btn-close-fantasy" style="position: relative; top: 0; right: 0; margin: 15px auto;">✕</button>
         </div>
-    </div> <div id="compendiumModal" class="modal" style="display: none; z-index: 3800;">
-        <div class="modal-content" style="max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0;">
+    </div> 
+    
+    <div id="compendiumModal" class="modal" style="display: none; z-index: 3800;">
+        <div class="modal-content" style="max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0; position: relative;">
             
+            <button onclick="document.getElementById('compendiumModal').style.display='none'" class="btn-close-fantasy">✕</button>
+
             <div class="compendium-header" style="padding: 20px; background: var(--bg-wood-mid); border-bottom: 4px solid #0f0803;">
                 <h3 style="color: var(--gold); margin: 0 0 10px 0;">Grimório de Regras</h3>
                 
@@ -179,8 +192,8 @@
             <div id="rulesList" class="rules-scroll-area">
                 </div>
 
-            <div style="padding: 10px; background: var(--bg-wood-mid); border-top: 4px solid #0f0803;">
-                <button onclick="document.getElementById('compendiumModal').style.display='none'" class="btn-close" style="width: 100%;">FECHAR GRIMÓRIO</button>
+            <div style="padding: 15px; background: var(--bg-wood-mid); border-top: 4px solid #0f0803; text-align: center;">
+                <span style="color: var(--gold); font-family: 'Cinzel', serif; font-size: 0.8rem; opacity: 0.6;">Role para navegar no conhecimento</span>
             </div>
         </div>
     </div>

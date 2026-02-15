@@ -470,10 +470,35 @@ body {
 }
 
 /* Ajustes individuais */
-#toggleHistoryBtn { width: 100%; padding: 12px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; }
-#clearBtn { flex: 0.8; font-size: 1.6rem; } 
-.vant-cycle-btn { flex: 1.2; font-size: 0.65rem; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-
+#toggleHistoryBtn, #clearBtn, .mode-norm {
+    background: linear-gradient(to bottom, #4e342e, #2a1b0e) !important;
+    color: var(--parchment) !important;
+    border: 1px solid #5d4037 !important;
+    box-shadow: 
+        inset 0 1px 0 rgba(255,255,255,0.1), 
+        0 4px 0 #281b15, 
+        0 5px 10px rgba(0,0,0,0.5) !important;
+    text-shadow: 0 -1px 1px #000;
+}#clearBtn { flex: 0.8; font-size: 1.6rem; } 
+.vant-cycle-btn {
+    flex: 1.2;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    /* A CORREÇÃO ESTÁ AQUI: Definimos a fonte na base */
+    font-family: var(--font-title) !important;
+    font-weight: 900 !important;
+    text-transform: uppercase;
+    
+    /* Ajuste leve no tamanho para a palavra "Desvantagem" caber sem apertar */
+    font-size: 0.6rem !important; 
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
 /* --- MODIFICADOR: O "NICHO" NA MADEIRA --- */
 .modifier-wrapper {
     flex: 0.8;
@@ -490,7 +515,6 @@ body {
 .mode-adv { 
     background: linear-gradient(to bottom, #43a047, #1b5e20) !important; 
     color: #fff !important; 
-    /* Borda escura em vez de clara para não parecer artificial */
     border: 1px solid #0d3311 !important;
     box-shadow: 
         inset 0 1px 0 rgba(255,255,255,0.2), 
@@ -500,14 +524,12 @@ body {
 .mode-dis { 
     background: linear-gradient(to bottom, #d32f2f, #8e0000) !important; 
     color: #fff !important; 
-    /* Borda escura para profundidade natural */
     border: 1px solid #5f0000 !important;
     box-shadow: 
         inset 0 1px 0 rgba(255,255,255,0.2), 
         0 4px 0 #5f0000, 
         0 5px 10px rgba(0,0,0,0.5) !important; 
 }
-
 /* --- BOTÃO ROLAR GIGANTE --- */
 .roll-btn-wrapper { flex: 1; }
 #rollBtn {
@@ -597,17 +619,20 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
     bottom: 100%; 
     left: 0;
     width: 100%;
-    
     background: rgba(30, 20, 10, 0.98); 
     box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
-    border-top: 0 solid transparent; 
+    
+    /* TRUQUE: Deixe a borda sempre com 3px, mas transparente */
+    border-top: 3px solid transparent; 
     
     max-height: 0;
-    
-    /* MUDANÇA AQUI: Hidden impede a barra de piscar durante a animação */
     overflow: hidden; 
     
-    transition: max-height 0.3s ease-out, border-top 0.2s;
+    /* SINCRONIZAÇÃO: Mesmo tempo e mesma curva para tudo */
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-top-color 0.4s ease,
+                padding 0.4s ease;
+                
     padding: 0 20px;
     border-radius: 15px 15px 0 0;
     z-index: 100;
@@ -636,12 +661,13 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
     flex-shrink: 0;
 }
 #historyPanel.open {
-    max-height: 45vh;
-    border-top: 3px solid var(--gold);
+    /* Ajuste para um valor fixo seguro ou vh, mas que combine com o tempo */
+    max-height: 45vh; 
     
-    /* MUDANÇA AQUI: A barra só existe quando o painel está aberto */
+    /* Apenas mudamos a cor, a largura (3px) já existia */
+    border-top-color: var(--gold); 
+    
     overflow-y: auto; 
-    
     padding-top: 15px;
     padding-bottom: 15px;
 }
@@ -811,7 +837,7 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
 #modDisplay {
     font-size: 1.4rem;
     font-weight: bold;
-    color: #ffb300;
+    color: #ffbb00;
     font-family: 'Cinzel', serif;
 }
 
@@ -826,14 +852,14 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
 }
 
 .mod-btn {
-    background: linear-gradient(to bottom, var(--stone-light), var(--stone-dark));
-    border: 1px solid #263238;
+    background: linear-gradient(145deg, #381f13, #5f3a25, #411e0b, #492e23, #29150b) !important;
+    border: 2px solid #3e2723 !important;
     color: white;
     padding: 12px 0;
     font-size: 1rem;
     font-weight: bold;
     border-radius: 5px;
-    box-shadow: 0 3px 0 #102027;
+    box-shadow: 0 3px 0 #271810;
     font-family: 'Lato', sans-serif;
 }
 
@@ -867,6 +893,179 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
     box-shadow: 0 3px 0 #102027;
     transition: all 0.2s;
 }
+/* --- BOTÃO FECHAR (Estilo Selo de Cera) --- */
+/* --- BOTÃO FECHAR ESTILO FANTASIA (Selo de Cera) --- */
+.btn-close-fantasy {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    background: radial-gradient(circle, #d32f2f 0%, #8b0000 70%, #5a0000 100%);
+    color: #ffd700; /* Dourado */
+    border: 3px solid #3e2723;
+    border-radius: 50%;
+    font-size: 22px;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.6), 
+                inset 0 0 10px rgba(0,0,0,0.5);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+}
+
+.btn-close-fantasy:hover {
+    transform: scale(1.1) rotate(15deg);
+    background: radial-gradient(circle, #ff1744 0%, #b71c1c 70%, #7f0000 100%);
+    box-shadow: 0 0 15px rgba(255, 23, 68, 0.6);
+}
+
+/* --- BOTÃO CONFIGURAÇÕES ESTILO FANTASIA (Engrenagem Metálica) --- */
+.btn-settings-fantasy {
+    background: var(--bg-wood-light); 
+    border: none; 
+    padding: 6px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px !important;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-settings-fantasy:hover {
+    filter: brightness(1.2);
+}
+
+.btn-settings-fantasy:hover svg {
+    transform: rotate(90deg);
+    transition: transform 0.5s ease;
+}
+
+/* Ajuste no cabeçalho do Grimório para o botão não sobrepor */
+/* --- AJUSTE DO CABEÇALHO DO GRIMÓRIO --- */
+.compendium-header {
+    padding: 35px 20px 15px 20px !important; /* Aumenta o topo para o botão não "engolir" a busca */
+    background: var(--bg-wood-mid);
+    border-bottom: 4px solid #0f0803;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Garante que a barra de busca não bata no botão em telas pequenas */
+.search-container {
+    position: relative;
+    width: 100%;
+    margin-right: 40px; /* Cria um recuo preventivo no lado do botão */
+}
+
+/* --- EFEITO DE GRADIENTE NAS ABAS (CATEGORY-FILTERS) --- */
+.category-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 5px 10px;
+    scrollbar-width: none; /* Esconde barra no Firefox */
+    
+    /* A Mágica do Gradiente Lateral */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.category-filters::-webkit-scrollbar { 
+    display: none; /* Esconde barra no Chrome/Safari */
+}
+
+/* --- AJUSTE DO BOTÃO FECHAR NO GRIMÓRIO --- */
+#compendiumModal .btn-close-fantasy {
+    position: absolute;
+    /* Ajuste fino: ele sai um pouco para fora para parecer um lacre de verdade */
+    top: -25px; 
+    right: -25px; 
+    width: 55px;
+    height: 55px;
+    background: radial-gradient(circle, #d32f2f 0%, #8b0000 70%, #5a0000 100%);
+    color: #ffd700;
+    border: 3px solid #3e2723;
+    border-radius: 50%;
+    font-size: 24px;
+    z-index: 9999; /* Garante que está acima de qualquer borda */
+    cursor: pointer;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.6);
+}
+.rules-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    background: #eecfa1;
+    padding: 15px;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.rules-scroll-area::-webkit-scrollbar {
+    display: none; /* Chrome, Safari e Opera */
+}
+
+/* --- CABEÇALHO E ABAS (ORGANIZAÇÃO) --- */
+#compendiumModal .btn-close-fantasy {
+    position: absolute;
+    top: 15px;      /* Distância do topo */
+    right: 15px;    /* Distância da direita - Mantém dentro da caixa */
+    width: 42px;
+    height: 42px;
+    z-index: 1001;
+    margin: 0;      /* Remove margens automáticas */
+}
+
+/* --- AJUSTE DO CABEÇALHO DO GRIMÓRIO --- */
+.compendium-header {
+    /* Aumentamos o padding-top para 45px para dar espaço ao botão */
+    padding: 45px 20px 15px 20px !important; 
+    background: var(--bg-wood-mid);
+    border-bottom: 4px solid #0f0803;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* --- GRADIENTE SUAVE NAS ABAS (CATEGORY-FILTERS) --- */
+.category-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 5px;
+    scrollbar-width: none; /* Esconde barra no Firefox */
+    
+    /* Cria o efeito de "sumir" nas pontas ao arrastar */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.category-filters::-webkit-scrollbar {
+    display: none; /* Esconde barra no Chrome/Safari */
+}
+
+/* --- REMOVER QUALQUER SOBRA DE BARRA NO CONTEÚDO --- */
+#compendiumModal .modal-content {
+    overflow: hidden !important; /* Impede que o botão cause rolagem no modal principal */
+}
+
+.rules-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.rules-scroll-area::-webkit-scrollbar {
+    display: none;
+}
+
 
 /* Cores quando ativos */
 .adv-btn.active#btn-dis { background: linear-gradient(to bottom, #ef5350, #b71c1c); color: #fff; box-shadow: 0 3px 0 #7f0000; border-color: #ffcdd2; }
@@ -894,6 +1093,87 @@ input[type="text"] { background: #fff3e0; border: 2px solid #8d6e63; color: var(
     position: sticky;
     top: -16px; /* Gruda no topo do visor interno */
     z-index: 100;
+}
+/* --- JANELA DE CONFIGURAÇÕES (PREMIUM) --- */
+#settingsMenu .modal-content {
+    background: var(--parchment);
+    border: 8px solid var(--bg-wood-dark);
+    box-shadow: 0 0 0 10px #5d4037, 0 20px 50px rgba(0,0,0,0.8);
+    max-width: 380px;
+    padding: 30px 20px;
+}
+
+#settingsMenu h3 {
+    font-family: var(--font-title);
+    color: #3e2723;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #8d6e63;
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Itens de Configuração */
+.settings-group {
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+.settings-group .desc {
+    font-size: 0.8rem;
+    color: #5d4037;
+    margin-top: 8px;
+    font-style: italic;
+    line-height: 1.3;
+    padding: 0 10px;
+}
+
+/* Botões de Ação de Configuração (Estilo 3D) */
+.btn-settings-action {
+    width: 100%;
+    padding: 14px;
+    font-family: var(--font-title);
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.1s;
+    border: 1px solid rgba(0,0,0,0.3);
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+}
+
+/* Botão Zerar (Luz Âmbar) */
+.btn-warning-fantasy {
+    background: linear-gradient(145deg, #381f13, #5f3a25, #411e0b, #492e23, #29150b) !important;
+    border: 2px solid #3e2723 !important;
+    box-shadow: 0 4px 0 #1d0b06, 0 4px 10px rgba(0,0,0,0.3);
+    text-shadow: none;
+    color: #fff;
+}
+
+/* Botão Reiniciar (Vermelho Sangue) */
+.btn-danger-fantasy {
+    background: linear-gradient(145deg, #381f13, #5f3a25, #411e0b, #492e23, #29150b) !important;
+    border: 2px solid #3e2723 !important;
+    color: #fff;
+    box-shadow: 0 4px 0 #000000, 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.btn-settings-action:active {
+    transform: translateY(4px);
+    box-shadow: none !important;
+}
+
+/* Botão Fechar das Configurações */
+#settingsMenu .btn-close-fantasy {
+    position: relative;
+    top: 0;
+    right: 0;
+    margin: 10px auto 0 auto;
+    width: 50px;
+    height: 50px;
 }
 
 /* Cores por Nível */

@@ -120,7 +120,9 @@ let sparkleTexture = null;
 let walls = { left: null, right: null, top: null, bottom: null };
 let isGameRunning = false;
 let clock = new THREE.Clock();
-let rollMode = 'normal'; 
+let rollMode = 'normal';
+let lastCollisionTime = 0; // Faltava isso
+let matDice, matGround;    // Mova para o escopo global
 
 // --- 2. INICIALIZAÇÃO ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -370,37 +372,39 @@ function renderTabs() {
 }
 
 function switchTab(i) {
-    if(i === activeCharIndex && campaign.characters.length > 0 && document.getElementById("appContainer").style.display !== 'none') return;
-    
-    const modInput = document.getElementById("modInput");
-    const modDisplay = document.getElementById("modDisplay");
+    if (i < 0 || i >= campaign.characters.length) return;
 
-    if (activeCharIndex >= 0 && activeCharIndex < campaign.characters.length) {
-        const oldChar = campaign.characters[activeCharIndex];
-        if (modInput) oldChar.modifier = parseInt(modInput.value) || 0;
-        oldChar.rollMode = rollMode; 
-        if(oldChar.history && oldChar.history.some(h => h.turn === oldChar.turnCount)) oldChar.turnCount++;
-    }
+    // Se clicar na aba que já está ativa, não faz nada (opcional)
+    // if(i === activeCharIndex) return; 
 
-    activeCharIndex = i; 
+    activeCharIndex = i;
     const char = campaign.characters[activeCharIndex];
 
-    if (char) {
-        const val = char.modifier || 0;
-        if (modInput) modInput.value = val;
-        if (modDisplay) modDisplay.innerText = (val > 0 ? "+" : "") + val;
-        setRollMode(char.rollMode || 'normal');
-    }
+    // 1. LIMPA A TELA PARA O PRÓXIMO PERSONAGEM (O que estava faltando)
+    clearDice(); 
 
-    renderTabs(); clearDice(); updateHistoryUI(); saveData();
+    // 2. Atualiza Modificador e Modo de Rolagem
+    const modInput = document.getElementById("modInput");
+    const modDisplay = document.getElementById("modDisplay");
+    if (modInput) modInput.value = char.modifier || 0;
+    if (modDisplay) modDisplay.innerText = (char.modifier > 0 ? "+" : "") + (char.modifier || 0);
+    setRollMode(char.rollMode || 'normal');
 
+    // 3. Atualiza Avatar e Placar
     const avatarDisplay = document.getElementById("currentAvatarDisplay");
-    if (avatarDisplay && char) { 
+    if (avatarDisplay && char) {
         avatarDisplay.innerHTML = char.avatar; 
-        avatarDisplay.style.borderColor = char.color; 
-        const svg = avatarDisplay.querySelector('svg'); if(svg) svg.style.fill = char.color; 
+        avatarDisplay.style.borderColor = char.color;
+        const svg = avatarDisplay.querySelector('svg');
+        if (svg) svg.style.fill = char.color;
     }
-    const resTotal = document.getElementById("resultTotal"); if(resTotal && char) resTotal.style.color = char.color;
+
+    const resTotal = document.getElementById("resultTotal");
+    if (resTotal) resTotal.style.color = char.color;
+
+    renderTabs();
+    updateHistoryUI(); 
+    saveData();
 }
 
 // --- MENU ---
@@ -410,11 +414,12 @@ function toggleSettings() {
     playSound('click');
 }
 function resetJourney() { 
-    if(confirm("Tem certeza? Isso apagará TUDO.")) { 
-        localStorage.removeItem("rollen_save_v1"); 
-        location.reload(); 
+    if(confirm("ATENÇÃO: Isso apagará permanentemente todos os seus heróis e a campanha atual. Deseja continuar?")) { 
+        localStorage.clear(); // Apaga o banco de dados
+        campaign = { name: "Aventura", characters: [], globalLog: [] };
+        isGameRunning = false;
+        location.reload(); // Recarrega para o estado inicial
     } 
-    playSound('click');
 }
 function resetCampaignHistory() { 
     if(confirm("Zerar histórico?")) { 
@@ -436,7 +441,7 @@ function initPhysicsAndGraphics() {
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true }); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; container.appendChild(renderer.domElement);
     sparkleTexture = createSparkleTexture();
     world = new CANNON.World(); world.gravity.set(0, -40, 0); world.broadphase = new CANNON.NaiveBroadphase(); world.solver.iterations = 10;
-    const matGround = new CANNON.Material(); const matDice = new CANNON.Material();
+    matGround = new CANNON.Material(); matDice = new CANNON.Material();    
     world.addContactMaterial(new CANNON.ContactMaterial(matGround, matDice, { friction: 0.2, restitution: 0.7 }));
     world.addContactMaterial(new CANNON.ContactMaterial(matDice, matDice, { friction: 0.1, restitution: 0.7 }));
     const groundBody = new CANNON.Body({ mass: 0, shape: new CANNON.Plane(), material: matGround });
@@ -480,18 +485,44 @@ function addDice(sides) {
     if (!scene) return;
     const char = campaign.characters[activeCharIndex]; 
     const color = char ? char.color : diceConfigs[sides].color;
+    
     try {
         const { geometry, shape, angularDamping } = createDiceGeometry(sides, 1.0);
-        const material = new THREE.MeshPhysicalMaterial({ color: color, metalness: 0.2, roughness: 0.1, clearcoat: 1.0, clearcoatRoughness: 0.1, flatShading: true, transparent: true, opacity: 1.0 }); 
-        const mesh = new THREE.Mesh(geometry, material); mesh.castShadow = true; mesh.receiveShadow = false; scene.add(mesh);
-        const body = new CANNON.Body({ mass: 5, shape: shape, linearDamping: 0.5, angularDamping: angularDamping, material: world.defaultContactMaterial.materials[1] });
-        body.position.set((Math.random()-0.5)*2, 8, (Math.random()-0.5)*2); body.quaternion.set(Math.random(), Math.random(), Math.random(), Math.random());
-        body.addEventListener("collide", handleDiceCollision);
-        world.addBody(body); diceObjects.push({ mesh, body, type: sides, stopped: false });
-        updateDiceButtonUI(sides, 1); clearMagicEffects();
-    } catch (e) { console.error("Erro no dado D" + sides, e); }
-}
+        
+        const material = new THREE.MeshPhysicalMaterial({ 
+            color: color, 
+            metalness: 0.2, 
+            roughness: 0.1, 
+            clearcoat: 1.0, 
+            flatShading: true 
+        }); 
 
+        const mesh = new THREE.Mesh(geometry, material); 
+        mesh.castShadow = true; 
+        scene.add(mesh);
+
+        // CORREÇÃO AQUI: Usar a variável global matDice
+        const body = new CANNON.Body({ 
+            mass: 5, 
+            shape: shape, 
+            linearDamping: 0.5, 
+            angularDamping: angularDamping, 
+            material: matDice // <--- MUDANÇA AQUI
+        });
+
+        body.position.set((Math.random()-0.5)*2, 8, (Math.random()-0.5)*2); 
+        body.quaternion.set(Math.random(), Math.random(), Math.random(), Math.random());
+        body.addEventListener("collide", handleDiceCollision);
+        
+        world.addBody(body); 
+        diceObjects.push({ mesh, body, type: sides, stopped: false });
+        
+        updateDiceButtonUI(sides, 1); 
+        clearMagicEffects();
+    } catch (e) { 
+        console.error("Erro ao gerar dado:", e); 
+    }
+}
 function createSparkleTexture() { const c = document.createElement('canvas'); c.width = 32; c.height = 32; const x = c.getContext('2d'); const g = x.createRadialGradient(16,16,0,16,16,16); g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(1,'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0,0,32,32); return new THREE.CanvasTexture(c); }
 function createNumberLabel(text, colorHex) {
     const c = document.createElement('canvas'); const s = 256; c.width = s; c.height = s; const x = c.getContext('2d');
@@ -597,52 +628,108 @@ function calculateResults() {
     let formulaText = parts.join(" + "); 
     if (modifier !== 0) formulaText += ` ${modifier > 0 ? "+" : ""}${modifier} (Mod)`;
 
-    isRolling = false; updateResultDisplay(formulaText, total);
-    if (isCritSuccess) triggerCritEffect('success'); else if (isCritFail) triggerCritEffect('fail');
+    // ... (parte final da calculateResults após calcular o total)
+    isRolling = false;
+    updateResultDisplay(formulaText, total);
+    
+    if (isCritSuccess) triggerCritEffect('success'); 
+    else if (isCritFail) triggerCritEffect('fail');
 
-    const char = campaign.characters[activeCharIndex]; 
-    if (char) { 
-        char.modifier = modifier; 
-        saveHistory(char, total, formulaText.replace(/<[^>]*>?/gm, '')); 
-        
+    const char = campaign.characters[activeCharIndex];
+    if (char) {
+        // Salva no Histórico Individual (limpa tags HTML da fórmula para o histórico)
+        const cleanFormula = formulaText.replace(/<[^>]*>?/gm, '');
+        saveHistory(char, total, cleanFormula);
+
+        // Salva no Log Global
         if (!campaign.globalLog) campaign.globalLog = [];
+        
         const d20Roll = rolls.find(r => r.type === 20 && !r.ignored);
-        const d20Value = d20Roll ? d20Roll.val : null;
-
+        
         campaign.globalLog.push({
-            charName: char.name, charColor: char.color, formula: formulaText.replace(/<[^>]*>?/gm, ''), 
-            total: total, rawD20: d20Value, 
+            charName: char.name,
+            charColor: char.color,
+            formula: cleanFormula,
+            total: total,
+            rawD20: d20Roll ? d20Roll.val : null,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
-    } 
+    }
     saveData();
 }
-
 function triggerCritEffect(type) { const body = document.body; if (type === 'success') { body.classList.add('crit-success-flash'); setTimeout(() => body.classList.remove('crit-success-flash'), 1000); } else { body.classList.add('crit-fail-flash', 'shake-effect'); setTimeout(() => body.classList.remove('crit-fail-flash', 'shake-effect'), 500); } }
 function clearDice() { 
-    diceObjects.forEach(d => { scene.remove(d.mesh); world.removeBody(d.body); }); 
-    diceObjects = []; clearMagicEffects(); 
+    // Remove os dados físicos e visuais do 3D
+    diceObjects.forEach(d => { 
+        if(d.mesh) scene.remove(d.mesh); 
+        if(d.body) world.removeBody(d.body); 
+    }); 
+    
+    diceObjects = []; 
+    clearMagicEffects(); // Remove números flutuantes e brilhos
+    
+    // Reseta os botões (badges vermelhas)
     diceTypes.forEach(d => updateDiceButtonUI(d, 0, true)); 
+    
+    // LIMPA O VISOR DE TEXTO (Importante para o próximo usuário)
     updateResultDisplay("Adicione dados...", "0"); 
-    isRolling = false; 
+    
+    isRolling = false; // Interrompe qualquer cálculo pendente
     playSound('touch');
 }
-function saveHistory(char, total, formula) { 
-    if (!char.history) char.history = []; // Garante array
-    let turn = char.history.find(h => h.turn === char.turnCount); 
-    if (!turn) { turn = { turn: char.turnCount, rolls: [] }; char.history.push(turn); } 
-    turn.rolls.push({ total, formula }); 
-    updateHistoryUI(); 
+function saveHistory(char, total, formula) {
+    if (!char.history) char.history = [];
+    
+    // Adiciona a rolagem diretamente ao histórico do personagem
+    char.history.push({
+        turn: char.turnCount || 1,
+        total: total,
+        formula: formula
+    });
+    
+    updateHistoryUI();
+}
+function updateHistoryUI() {
+    const char = campaign.characters[activeCharIndex];
+    const list = document.getElementById("historyList");
+    if (!char || !list) return;
+
+    list.innerHTML = "";
+
+    // Inverte para mostrar a mais recente primeiro
+    const reversedHistory = [...char.history].reverse();
+
+    if (reversedHistory.length === 0) {
+        list.innerHTML = "<li style='text-align:center; opacity:0.5; padding:20px;'>Nenhuma rolagem ainda...</li>";
+        return;
+    }
+
+    reversedHistory.forEach(entry => {
+        const li = document.createElement("li");
+        li.className = "roll-entry";
+        li.innerHTML = `
+            <span class="roll-formula">${entry.formula}</span>
+            <span class="roll-equals">=</span>
+            <span class="roll-total" style="color:${char.color}">${entry.total}</span>
+        `;
+        list.appendChild(li);
+    });
 }
 
-function updateHistoryUI() { 
-    const char = campaign.characters[activeCharIndex]; if(!char || !char.history) return; 
-    const list = document.getElementById("historyList"); if(!list) return; 
-    list.innerHTML = ""; 
-    [...char.history].reverse().forEach(e => { 
-        const h = document.createElement("li"); h.className = "turn-header"; h.innerHTML = `TURNO ${e.turn}`; list.appendChild(h); 
-        e.rolls.forEach(r => { const li = document.createElement("li"); li.className = "roll-entry"; li.innerHTML = `<span class="roll-formula">${r.formula}</span> <span class="roll-equals">=</span> <span class="roll-total">${r.total}</span>`; list.appendChild(li); }); 
-    }); 
+// --- FUNÇÃO PARA ABRIR/FECHAR O PAINEL DE HISTÓRICO ---
+function toggleHistory() {
+    const panel = document.getElementById("historyPanel");
+    const btn = document.getElementById("toggleHistoryBtn");
+    
+    if (!panel || !btn) return;
+
+    // Alterna a classe 'open' que definimos no CSS
+    const isOpen = panel.classList.toggle("open");
+    
+    // Muda o texto do botão conforme o estado
+    btn.innerText = isOpen ? "Ocultar Histórico" : "Ver Histórico";
+    
+    playSound('click');
 }
 
 function animate() {
@@ -896,3 +983,33 @@ function filterCategory(cat) {
     if (typeof rulesData === 'undefined') return;
     if (cat === 'all') renderRules(rulesData); else { const filtered = rulesData.filter(r => r.category === cat); renderRules(filtered); }
 }
+function setupEventListeners() {
+    // Liga o botão de adicionar herói
+    const addBtn = document.getElementById("addCharBtn");
+    if (addBtn) addBtn.onclick = addCharacterPreview;
+
+    // Liga o botão de iniciar jogo
+    const startBtn = document.getElementById("startCampaignBtn");
+    if (startBtn) startBtn.onclick = startCampaign;
+
+    // Sistema de carga do botão ROLAR
+    const rollBtn = document.getElementById("rollBtn");
+    if (rollBtn) {
+        rollBtn.addEventListener("mousedown", startCharging);
+        window.addEventListener("mouseup", releaseRoll);
+        rollBtn.addEventListener("touchstart", (e) => { e.preventDefault(); startCharging(); });
+        window.addEventListener("touchend", releaseRoll);
+    }
+    const clearBtn = document.getElementById("clearBtn");
+    if (clearBtn) clearBtn.onclick = clearDice;
+    const histBtn = document.getElementById("toggleHistoryBtn");
+    if (histBtn) histBtn.onclick = toggleHistory;
+    window.addEventListener("resize", refreshCanvasSize);
+}
+
+// Chame essa função dentro do DOMContentLoaded para garantir que os botões "acordem"
+document.addEventListener("DOMContentLoaded", () => {
+    // ... seu código de loadData ...
+    setupEventListeners(); // <--- FUNDAMENTAL
+    // ... resto do código ...
+});
