@@ -1,0 +1,15 @@
+# Dependências (NUNCA envie isso)
+node_modules/
+
+# Arquivos de Sistema
+.DS_Store
+Thumbs.db
+
+# Logs de erro
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos locais (Opcional - veja a nota abaixo)
+script.js
+regras.js

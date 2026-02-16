@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rollen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <link rel="preload" as="image" href="master.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rollen | Dados 3D & Grimório D&D 2024</title>
+    <meta name="description" content="Role dados 3D imersivos e consulte todas as regras do D&D 2024 em um só lugar.">
+
+    <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Rollen" />
+    <link rel="manifest" href="site.webmanifest" />
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Rollen: Sua Mesa de RPG Digital">
+    <meta property="og:description" content="Física real, regras completas e suporte para múltiplos personagens.">
+    <meta property="og:image" content="master.png"> <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="splash-screen">
+    <div class="splash-content">
+        <img src="favicon-96x96.png" id="splash-logo" alt="Rollen Logo">
+        <div class="spinner-container">
+            <div class="magic-spinner"></div>
+        </div>
+        <p class="splash-text">Preparando o Grimório...</p>
+    </div>
+</div>
+    <div id="setupModal" class="modal">
+        <div class="modal-content">
+            <div id="appCredits">Criado por Yallen Carvalho</div>
+            <div class="campaign-section">
+                <input type="text" id="campaignNameInput" placeholder="Nome da campanha">
+            </div>
+            
+            <button id="startCampaignBtn" disabled>INICIAR JORNADA</button>
+            <hr class="divider">
+         
+            <div class="avatar-selection-label">Quem você é?</div>
+            
+            <div id="avatarGrid" class="avatar-grid"></div>
+
+            <div class="char-form">
+                <input type="text" id="charNameInput" placeholder="Nome do Herói">
+                <div class="color-picker-wrapper">
+                    <input type="color" id="charColorInput" value="#ef5350" style="z-index: 10;">
+                    <span id="colorLabel">Cor</span>
+                </div>
+            </div>
+            
+            <button id="addCharBtn" class="btn-secondary">Adicionar à Mesa</button>
+            <ul id="charListPreview"></ul>
+        </div>
+    </div>
+
+    <div id="globalLogModal" class="modal" style="display: none; z-index: 3500;">
+        <div class="modal-content">
+            <h3 style="color: #5d4037; font-family: 'Cinzel', serif; margin-bottom: 5px;">Crônicas da Campanha</h3>
+            
+            <div class="stats-banner">
+                <div class="stat-box lucky">
+                    <div class="stat-icon">☀️</div>
+                    <div class="stat-title">Maior Sorte</div>
+                    <div id="statLuckyName" class="stat-name">--</div>
+                    <div id="statLuckyVal" class="stat-val">Média: -</div>
+                </div>
+                <div class="stat-box unlucky">
+                    <div class="stat-icon">🌑</div>
+                    <div class="stat-title">Maior Azar</div>
+                    <div id="statUnluckyName" class="stat-name">--</div>
+                    <div id="statUnluckyVal" class="stat-val">Média: -</div>
+                </div>
+            </div>
+
+            <hr style="border-color: #a1887f; opacity: 0.3; margin: 15px 0;">
+
+            <ul id="globalLogList" class="global-log-list">
+                </ul>
+            
+            <button onclick="document.getElementById('globalLogModal').style.display='none'" class="btn-close-fantasy" style="position: relative; top: 0; right: 0; margin: 15px auto;">✕</button>
+        </div>
+    </div>
+
+    <div id="settingsMenu" class="modal" style="display: none; z-index: 3000;">
+        <div class="modal-content">
+            <h3>Opções da Jornada</h3>
+<div class="settings-group">
+    <button onclick="openDonation()" class="btn-donate-legendary">
+        <span class="shiny-effect"></span>
+        💎 Ofertar ao Criador
+    </button>
+    <p class="desc" style="color: #bf360c;">Apoie o desenvolvimento e ganhe +10 de Carisma na vida real!</p>
+</div>
+
+<hr style="border: 0; border-top: 1px dashed #8d6e63; margin: 20px 0;">
+            <div class="settings-group">
+                <button onclick="resetCampaignHistory()" class="btn-settings-action btn-warning-fantasy">Zerar Histórico</button>
+                <p class="desc">Mantém os heróis na mesa, mas apaga todas as crônicas e estatísticas de sorte.</p>
+            </div>
+
+            <div class="settings-group">
+                <button onclick="resetJourney()" class="btn-settings-action btn-danger-fantasy">Reiniciar Jornada</button>
+                <p class="desc">CUIDADO: Apaga a campanha e os personagens, retornando ao vazio inicial.</p>
+            </div>
+
+            <hr style="border: 0; border-top: 1px dashed #8d6e63; margin: 20px 0;">
+
+            <button onclick="toggleSettings()" class="btn-close-fantasy">✕</button>
+            <div style="font-family: 'Cinzel'; font-size: 0.7rem; color: #5d4037; margin-top: 8px; font-weight: bold;">VOLTAR</div>
+        </div>
+    </div>
+
+    <div id="appContainer" style="display: none;">
+        
+        <header id="topBar">
+            <div id="charTabsContainer"></div>
+            
+            <button id="logBtn" onclick="openGlobalLog()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffb300">
+                    <path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+                </svg>
+            </button>
+            <button id="compendiumBtn" onclick="openCompendium()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffb300">
+                    <path d="M12 3v18c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm-1-11h2v3h3v2h-3v3h-2v-3H8v-2h3V8z"/> <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6z"/>
+                </svg>
+            </button>
+            
+            <button id="settingsBtn" onclick="toggleSettings()" class="btn-settings-fantasy">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#3e2723"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+            </button>
+        </header>
+
+        <main id="mainDisplay">
+            <div id="canvasContainer"></div>
+            <div id="currentAvatarDisplay"></div>
+            <div id="uiOverlay">
+                <div id="resultDisplay">
+                    <div id="resultFormula">Role os dados...</div>
+                    <div id="resultTotal">0</div>
+                </div>
+            </div>
+            <div id="statusMessage"></div>
+        </main>
+
+        <section id="bottomPanel">
+            <div id="historyPanel">
+                <div class="history-handle"></div>
+                <h3>Histórico</h3>
+                <ul id="historyList"></ul>
+            </div>
+            
+            <button id="toggleHistoryBtn">Ver Histórico</button>
+
+            <div id="diceSelector"></div>
+
+            <div class="action-area">
+                <div class="utility-row">
+                    <button id="clearBtn" title="Limpar">🧹</button>
+                    
+                    <div class="modifier-wrapper" onclick="toggleModPicker()">
+                         <label>MOD</label>
+                         <div id="modDisplay">+0</div>
+                         <input type="hidden" id="modInput" value="0">
+                    </div>
+
+                    <button id="cycleVantBtn" class="vant-cycle-btn mode-norm" onclick="cycleRollMode()">NORM</button>
+                </div>
+
+                <div class="roll-btn-wrapper">
+                    <button id="rollBtn">
+                        <span style="position:relative; z-index:2;">ROLAR</span>
+                        <div id="powerBar"></div>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="regras-real.js"></script>
+    <script src="script-real.js"></script>
+
+    <div id="modPickerModal" class="modal" style="display: none; z-index: 4000;">
+        <div class="modal-content" style="max-width: 320px;">
+            <h3 style="font-family: 'Cinzel', serif; margin-bottom: 15px; color: #ffb300;">Modificador</h3>
+            <div id="modGrid" class="mod-grid"></div>
+            <button onclick="toggleModPicker()" class="btn-close-fantasy" style="position: relative; top: 0; right: 0; margin: 15px auto;">✕</button>
+        </div>
+    </div> 
+    
+    <div id="compendiumModal" class="modal" style="display: none; z-index: 3800;">
+        <div class="modal-content" style="max-width: 600px; height: 85vh; display: flex; flex-direction: column; padding: 0; position: relative;">
+            
+            <button onclick="document.getElementById('compendiumModal').style.display='none'" class="btn-close-fantasy">✕</button>
+
+            <div class="compendium-header" style="padding: 20px; background: var(--bg-wood-mid); border-bottom: 4px solid #0f0803;">
+                <h3 style="color: var(--gold); margin: 0 0 10px 0;">Grimório de Regras</h3>
+                
+                <div class="search-container">
+                    <input type="text" id="ruleSearch" placeholder="Pesquisar regra, condição..." onkeyup="filterRules()">
+                    <span class="search-icon">🔍</span>
+                </div>
+                
+                <div class="category-filters">
+                    <button onclick="filterCategory('all')" class="cat-btn active">Tudo</button>
+                    <button onclick="filterCategory('basics')" class="cat-btn" style="color: #a8a8a8; border-color: #696969;">Básico</button>
+                    <button onclick="filterCategory('condition')" class="cat-btn" style="color: #47aabc; border-color: #1fa29b;">Condições</button>
+                    <button onclick="filterCategory('action')" class="cat-btn" style="color: #8d84ff; border-color: #3a36ff;">Ações</button>
+                    <button onclick="filterCategory('env')" class="cat-btn" style="color: #47bc64; border-color: #2aa21f;">Ambiente</button>
+                    <button onclick="filterCategory('class')" class="cat-btn" style="color: #ff7777; border-color: #b60202;">Classes</button>
+                    <button onclick="filterCategory('spell')" class="cat-btn" style="color: #e96eff; border-color: #ef05f7;">Magias</button>
+                    <button onclick="filterCategory('species')" class="cat-btn" style="color: #d4853a; border-color: #ff6600;">Raças</button>
+                    <button onclick="filterCategory('equipment')" class="cat-btn" style="color: #cfd8dc; border-color: #607d8b;">Itens</button>
+                    <button onclick="filterCategory('feat')" class="cat-btn" style="color: #81c784; border-color: #43a047;">Talentos</button>                </div>
+            </div>
+
+            <div id="rulesList" class="rules-scroll-area">
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
