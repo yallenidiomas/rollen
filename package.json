@@ -6,7 +6,8 @@
     "build": "rimraf dist && mkdir dist && copyfiles -u 0 *.png *.ico *.svg *.webmanifest master.png *.mp3 dist && javascript-obfuscator script.js --output dist/script-real.js && javascript-obfuscator regras.js --output dist/regras-real.js && html-minifier-terser --collapse-whitespace --remove-comments index.html -o dist/index.html && cleancss -o dist/style.css style.css",    
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "watch": "nodemon --watch script.js --watch regras.js --watch style.css --exec \"npm run build\""
+    "watch": "nodemon --watch script.js --watch regras.js --watch style.css --exec \"npm run build\"",
+    "up": "npm run build && git add . && git commit -m \"Update Auto\" && git push && npm run deploy"
   },
   "keywords": [
     "rpg",
